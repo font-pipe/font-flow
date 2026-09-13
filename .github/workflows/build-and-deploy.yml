@@ -49,7 +49,7 @@ jobs:
       - name: Build woff2 files + manifest
         run: |
           python3 scripts/pipeline.py \
-            --sources .cache/gfonts/ofl .cache/gfonts/apache .cache/gfonts/ufl manual/general manual/itf \
+            --sources .cache/gfonts/ofl .cache/gfonts/apache .cache/gfonts/ufl manual/general manual/itf/ffl manual/itf/ofl \
             --out dist
 
       - name: Save dist for next run

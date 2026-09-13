@@ -37,6 +37,11 @@ import gfsubsets
 # redistribution before shipping a real foundry drop under it.
 ALLOWED_LICENSES = {"OFL", "OFL-1.1", "Apache-2.0", "APACHE2", "MIT", "UFL", "UFL-1.0", "CC0", "FFL"}
 LICENSE_FILENAMES = ["OFL.txt", "LICENSE.txt", "UFL.txt", "LICENSE"]
+# ITF ships different license files depending on the family — check each
+# family's License/ folder for whichever of these is present rather than
+# assuming one, since the answer varies per font (this is exactly the OFL
+# families getting silently skipped bug: they were assumed to be FFL-only).
+ITF_LICENSE_FILES = {"FFL.txt": "FFL", "OFL.txt": "OFL"}
 
 # Used only as a fallback, and only when a font's OS/2.usWeightClass and its
 # subfamily name disagree by more than 100 — see extract_style_weight_from_tables.
@@ -142,11 +147,17 @@ def read_itf_metadata(family_dir: Path, css_path: Path):
         raise ValueError("no 'Font Family:' line found in css header comment")
     family = family_match.group(1).strip()
 
-    license_file = family_dir / "License" / "FFL.txt"
-    if not license_file.exists():
-        raise ValueError(f"expected {license_file} (ITF/Fontshare Free Font License)")
-    if "FFL" not in ALLOWED_LICENSES:
-        raise ValueError("license 'FFL' not in allowlist")
+    license_dir = family_dir / "License"
+    license_file = license_name = None
+    for fname, lic in ITF_LICENSE_FILES.items():
+        candidate = license_dir / fname
+        if candidate.exists():
+            license_file, license_name = candidate, lic
+            break
+    if not license_file:
+        raise ValueError(f"no recognized license file under {license_dir} (looked for {', '.join(ITF_LICENSE_FILES)})")
+    if license_name not in ALLOWED_LICENSES:
+        raise ValueError(f"license '{license_name}' not in allowlist")
 
     fonts_dir = family_dir / "Fonts" / "WEB" / "fonts"
     faces = []
@@ -168,7 +179,7 @@ def read_itf_metadata(family_dir: Path, css_path: Path):
 
     return {
         "family": family,
-        "license": "FFL",
+        "license": license_name,
         "designer": "Unknown",
         "category": ["unknown"],
         "declared_subsets": None,
