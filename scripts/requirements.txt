@@ -5,3 +5,4 @@ gfsubsets==2025.11.4
 gflanguages==0.7.11
 pyyaml==6.0.3
 protobuf==7.34.1
+lxml==6.1.3
