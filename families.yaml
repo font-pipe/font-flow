@@ -9,7 +9,5 @@
 # For fonts from anywhere other than google/fonts, see manual/README.md instead.
 
 families:
-  - ofl/ysabeau
-  - ofl/ysabeauinfant
-  - ofl/ysabeauoffice
-  - ofl/ysabeausc
+  - ofl/yuyu
+  - ofl/yuyushort
