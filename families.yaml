@@ -1,0 +1,15 @@
+# Families to pull automatically from google/fonts, one per line, as their
+# exact path in that repo: <license-dir>/<family-slug>.
+#
+# To add a font: find its folder at https://github.com/google/fonts/tree/main/ofl
+# (or apache/, ufl/) and add that path here. To update everything to
+# whatever's currently upstream, just re-run the Action (Actions tab →
+# "Build and deploy fonts" → Run workflow) — no code change needed.
+#
+# For fonts from anywhere other than google/fonts, see manual/README.md instead.
+
+families:
+  - ofl/oswald
+  - ofl/fraunces
+  - ofl/inter
+  - ofl/roboto

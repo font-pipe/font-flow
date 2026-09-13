@@ -1,0 +1,7 @@
+fonttools==4.62.1
+brotli==1.1.0
+gfmetadata==0.2.5
+gfsubsets==2025.11.4
+gflanguages==0.7.11
+pyyaml==6.0.3
+protobuf==7.34.1

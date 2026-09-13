@@ -1,0 +1,101 @@
+name: Build and deploy fonts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "families.yaml"
+      - "manual/**"
+      - "scripts/**"
+      - ".github/workflows/build-and-deploy.yml"
+  # Lets you trigger a rebuild by hand from the Actions tab — this is how you
+  # "update the font repo by running the action again": nothing in this repo
+  # needs to change, it just re-pulls whatever's currently upstream for every
+  # family in families.yaml.
+  workflow_dispatch: {}
+  # Uncomment to also rebuild weekly, picking up upstream google/fonts
+  # changes (bug fixes, new weights) even when you haven't touched this repo:
+  # schedule:
+  #   - cron: "0 6 * * 1"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Fetch requested families from google/fonts
+        run: python3 scripts/fetch_google_families.py
+
+      - name: Build woff2 files + manifest
+        run: |
+          python3 scripts/pipeline.py \
+            --sources .cache/gfonts/ofl .cache/gfonts/apache .cache/gfonts/ufl manual \
+            --out dist
+
+      - name: Upload build output as a workflow artifact
+        # Handy for inspecting a build without deploying, or for debugging a
+        # skipped/failed family — check the Action run's "Artifacts" section.
+        uses: actions/upload-artifact@v4
+        with:
+          name: font-dist
+          path: dist
+          retention-days: 14
+
+      # --- Deploy: Cloudflare Pages (recommended — see README for why) ---
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+
+      # --- Alternative: R2 instead of Pages ---
+      # Swap the step above for this one if you'd rather target the R2
+      # bucket approach instead. Needs an R2 API token (Account → R2 → Manage
+      # API Tokens) rather than the Pages-scoped token above.
+      #
+      # - name: Deploy to R2
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      #     AWS_DEFAULT_REGION: auto
+      #   run: |
+      #     pip install awscli --break-system-packages -q
+      #     aws s3 sync dist/ s3://${{ vars.R2_BUCKET_NAME }}/ \
+      #       --endpoint-url https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com \
+      #       --delete
+
+      # --- Alternative: push dist/ to a second GitHub repo instead ---
+      # This is the "link two repos with a token" approach from your original
+      # question. Works, but every rebuild is a new commit of binary files in
+      # that repo's history, which grows unboundedly over time — direct
+      # deploy above avoids that entirely, since deployment isn't a commit.
+      # Only reach for this if you specifically want git history of the
+      # served output itself.
+      #
+      # - name: Push dist/ to output repo
+      #   env:
+      #     GH_TOKEN: ${{ secrets.FONTS_OUTPUT_REPO_TOKEN }}   # a PAT with repo write access
+      #   run: |
+      #     cd dist
+      #     git init -q
+      #     git remote add origin https://x-access-token:${GH_TOKEN}@github.com/YOUR_USERNAME/superelectric-ink-fonts-output.git
+      #     git checkout -b main
+      #     git add -A
+      #     git -c user.name="font-pipeline-bot" -c user.email="actions@users.noreply.github.com" \
+      #       commit -q -m "Rebuild: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      #     git push -f origin main
+      #     # Then connect that output repo to a Cloudflare Pages project via
+      #     # Cloudflare's own git integration, so pushes to it auto-deploy.
