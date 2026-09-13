@@ -38,11 +38,25 @@ jobs:
       - name: Fetch requested families from google/fonts
         run: python3 scripts/fetch_google_families.py
 
+      - name: Restore previous dist (for additive builds)
+        uses: actions/cache/restore@v4
+        with:
+          path: dist
+          key: font-dist-${{ github.run_id }}
+          restore-keys: |
+            font-dist-
+
       - name: Build woff2 files + manifest
         run: |
           python3 scripts/pipeline.py \
             --sources .cache/gfonts/ofl .cache/gfonts/apache .cache/gfonts/ufl manual \
             --out dist
+
+      - name: Save dist for next run
+        uses: actions/cache/save@v4
+        with:
+          path: dist
+          key: font-dist-${{ github.run_id }}
 
       - name: Upload build output as a workflow artifact
         # Handy for inspecting a build without deploying, or for debugging a

@@ -9,8 +9,7 @@
 # For fonts from anywhere other than google/fonts, see manual/README.md instead.
 
 families:
-  - ofl/oswald
-  - apache/crushed
-  - ofl/fraunces
-  - ofl/inter
-  - ofl/roboto
+  - ofl/ysabeau
+  - ofl/ysabeauinfant
+  - ofl/ysabeauoffice
+  - ofl/ysabeausc

@@ -234,6 +234,8 @@ def process_family(family_dir: Path, out_root: Path, manifest_entries: list):
         print(f"SKIP {meta['family']}: produced zero files", file=sys.stderr)
         return
 
+    # a family being rebuilt replaces its old entry rather than duplicating it
+    manifest_entries[:] = [e for e in manifest_entries if e["id"] != slug]
     manifest_entries.append({
         "id": slug,
         "family": meta["family"],
@@ -254,7 +256,15 @@ def main():
 
     out_root = Path(args.out)
     out_root.mkdir(parents=True, exist_ok=True)
+
+    manifest_path = out_root / "manifest.json"
     manifest_entries = []
+    if manifest_path.exists():
+        try:
+            manifest_entries = json.loads(manifest_path.read_text()).get("fonts", [])
+            print(f"Loaded {len(manifest_entries)} families from prior build (additive)")
+        except Exception as e:
+            print(f"WARN: couldn't read existing manifest, starting fresh: {e}", file=sys.stderr)
 
     for source_dir in args.sources:
         source_path = Path(source_dir)
