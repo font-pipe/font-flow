@@ -9,5 +9,4 @@
 # For fonts from anywhere other than google/fonts, see manual/README.md instead.
 
 families:
-  - ofl/yuyu
-  - ofl/yuyushort
+ofl/zain

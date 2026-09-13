@@ -20,8 +20,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
-
 REPO_URL = "https://github.com/google/fonts.git"
 CLONE_DIR = Path(".cache/gfonts")
 FAMILIES_FILE = Path("families.yaml")
@@ -33,8 +31,12 @@ def main():
               f"(This is fine if you're only using manual/ sources.)")
         return
 
-    config = yaml.safe_load(FAMILIES_FILE.read_text()) or {}
-    families = config.get("families", [])
+    families = []
+    for line in FAMILIES_FILE.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or line == "families:":
+            continue
+        families.append(line)
     if not families:
         print(f"{FAMILIES_FILE} has no families listed — skipping google/fonts fetch.")
         return

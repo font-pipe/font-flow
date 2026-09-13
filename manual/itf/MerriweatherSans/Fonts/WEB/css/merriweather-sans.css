@@ -1,0 +1,168 @@
+/**
+* @license
+*
+* Font Family: Merriweather Sans
+* Designed by: Eben Sorkin, Sorkin Type
+* URL: https://www.fontshare.com/fonts/merriweather-sans
+* © 2026 Indian Type Foundry
+*
+* Merriweather Sans Light 
+* Merriweather Sans LightItalic 
+* Merriweather Sans Regular 
+* Merriweather Sans Italic 
+* Merriweather Sans Medium 
+* Merriweather Sans MediumItalic 
+* Merriweather Sans SemiBold 
+* Merriweather Sans SemiBoldItalic 
+* Merriweather Sans Bold 
+* Merriweather Sans BoldItalic 
+* Merriweather Sans ExtraBold 
+* Merriweather Sans ExtraBoldItalic 
+* Merriweather Sans Variable (Variable font)
+* Merriweather Sans VariableItalic (Variable font)
+
+*
+*/
+@font-face {
+  font-family: 'MerriweatherSans-Light';
+  src: url('../fonts/MerriweatherSans-Light.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-Light.woff') format('woff'),
+       url('../fonts/MerriweatherSans-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MerriweatherSans-LightItalic';
+  src: url('../fonts/MerriweatherSans-LightItalic.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-LightItalic.woff') format('woff'),
+       url('../fonts/MerriweatherSans-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-display: swap;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'MerriweatherSans-Regular';
+  src: url('../fonts/MerriweatherSans-Regular.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-Regular.woff') format('woff'),
+       url('../fonts/MerriweatherSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MerriweatherSans-Italic';
+  src: url('../fonts/MerriweatherSans-Italic.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-Italic.woff') format('woff'),
+       url('../fonts/MerriweatherSans-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'MerriweatherSans-Medium';
+  src: url('../fonts/MerriweatherSans-Medium.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-Medium.woff') format('woff'),
+       url('../fonts/MerriweatherSans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MerriweatherSans-MediumItalic';
+  src: url('../fonts/MerriweatherSans-MediumItalic.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-MediumItalic.woff') format('woff'),
+       url('../fonts/MerriweatherSans-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'MerriweatherSans-SemiBold';
+  src: url('../fonts/MerriweatherSans-SemiBold.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-SemiBold.woff') format('woff'),
+       url('../fonts/MerriweatherSans-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MerriweatherSans-SemiBoldItalic';
+  src: url('../fonts/MerriweatherSans-SemiBoldItalic.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-SemiBoldItalic.woff') format('woff'),
+       url('../fonts/MerriweatherSans-SemiBoldItalic.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'MerriweatherSans-Bold';
+  src: url('../fonts/MerriweatherSans-Bold.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-Bold.woff') format('woff'),
+       url('../fonts/MerriweatherSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MerriweatherSans-BoldItalic';
+  src: url('../fonts/MerriweatherSans-BoldItalic.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-BoldItalic.woff') format('woff'),
+       url('../fonts/MerriweatherSans-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'MerriweatherSans-ExtraBold';
+  src: url('../fonts/MerriweatherSans-ExtraBold.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-ExtraBold.woff') format('woff'),
+       url('../fonts/MerriweatherSans-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MerriweatherSans-ExtraBoldItalic';
+  src: url('../fonts/MerriweatherSans-ExtraBoldItalic.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-ExtraBoldItalic.woff') format('woff'),
+       url('../fonts/MerriweatherSans-ExtraBoldItalic.ttf') format('truetype');
+  font-weight: 800;
+  font-display: swap;
+  font-style: italic;
+}
+/**
+* This is a variable font
+* You can control variable axes as shown below:
+* font-variation-settings: wght 300.0;
+*
+* available axes:
+'wght' (range from 300.0 to 800.0
+*/
+@font-face {
+  font-family: 'MerriweatherSans-Variable';
+  src: url('../fonts/MerriweatherSans-Variable.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-Variable.woff') format('woff'),
+       url('../fonts/MerriweatherSans-Variable.ttf') format('truetype');
+  font-weight: 300 800;
+  font-display: swap;
+  font-style: normal;
+}
+/**
+* This is a variable font
+* You can control variable axes as shown below:
+* font-variation-settings: wght 300.0;
+*
+* available axes:
+'wght' (range from 300.0 to 800.0
+*/
+@font-face {
+  font-family: 'MerriweatherSans-VariableItalic';
+  src: url('../fonts/MerriweatherSans-VariableItalic.woff2') format('woff2'),
+       url('../fonts/MerriweatherSans-VariableItalic.woff') format('woff'),
+       url('../fonts/MerriweatherSans-VariableItalic.ttf') format('truetype');
+  font-weight: 300 800;
+  font-display: swap;
+  font-style: italic;
+}
+

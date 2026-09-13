@@ -1,0 +1,128 @@
+/**
+* @license
+*
+* Font Family: Familjen Grotesk
+* Designed by: Familjen STHLM AB
+* URL: https://www.fontshare.com/fonts/familjen-grotesk
+* © 2026 Indian Type Foundry
+*
+* Familjen Grotesk Regular 
+* Familjen Grotesk Italic 
+* Familjen Grotesk Medium 
+* Familjen Grotesk MediumItalic 
+* Familjen Grotesk SemiBold 
+* Familjen Grotesk SemiBoldItalic 
+* Familjen Grotesk Bold 
+* Familjen Grotesk BoldItalic 
+* Familjen Grotesk Variable (Variable font)
+* Familjen Grotesk VariableItalic (Variable font)
+
+*
+*/
+@font-face {
+  font-family: 'FamiljenGrotesk-Regular';
+  src: url('../fonts/FamiljenGrotesk-Regular.woff2') format('woff2'),
+       url('../fonts/FamiljenGrotesk-Regular.woff') format('woff'),
+       url('../fonts/FamiljenGrotesk-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'FamiljenGrotesk-Italic';
+  src: url('../fonts/FamiljenGrotesk-Italic.woff2') format('woff2'),
+       url('../fonts/FamiljenGrotesk-Italic.woff') format('woff'),
+       url('../fonts/FamiljenGrotesk-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'FamiljenGrotesk-Medium';
+  src: url('../fonts/FamiljenGrotesk-Medium.woff2') format('woff2'),
+       url('../fonts/FamiljenGrotesk-Medium.woff') format('woff'),
+       url('../fonts/FamiljenGrotesk-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'FamiljenGrotesk-MediumItalic';
+  src: url('../fonts/FamiljenGrotesk-MediumItalic.woff2') format('woff2'),
+       url('../fonts/FamiljenGrotesk-MediumItalic.woff') format('woff'),
+       url('../fonts/FamiljenGrotesk-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'FamiljenGrotesk-SemiBold';
+  src: url('../fonts/FamiljenGrotesk-SemiBold.woff2') format('woff2'),
+       url('../fonts/FamiljenGrotesk-SemiBold.woff') format('woff'),
+       url('../fonts/FamiljenGrotesk-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'FamiljenGrotesk-SemiBoldItalic';
+  src: url('../fonts/FamiljenGrotesk-SemiBoldItalic.woff2') format('woff2'),
+       url('../fonts/FamiljenGrotesk-SemiBoldItalic.woff') format('woff'),
+       url('../fonts/FamiljenGrotesk-SemiBoldItalic.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'FamiljenGrotesk-Bold';
+  src: url('../fonts/FamiljenGrotesk-Bold.woff2') format('woff2'),
+       url('../fonts/FamiljenGrotesk-Bold.woff') format('woff'),
+       url('../fonts/FamiljenGrotesk-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'FamiljenGrotesk-BoldItalic';
+  src: url('../fonts/FamiljenGrotesk-BoldItalic.woff2') format('woff2'),
+       url('../fonts/FamiljenGrotesk-BoldItalic.woff') format('woff'),
+       url('../fonts/FamiljenGrotesk-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+  font-style: italic;
+}
+/**
+* This is a variable font
+* You can control variable axes as shown below:
+* font-variation-settings: wght 400.0;
+*
+* available axes:
+'wght' (range from 400.0 to 700.0
+*/
+@font-face {
+  font-family: 'FamiljenGrotesk-Variable';
+  src: url('../fonts/FamiljenGrotesk-Variable.woff2') format('woff2'),
+       url('../fonts/FamiljenGrotesk-Variable.woff') format('woff'),
+       url('../fonts/FamiljenGrotesk-Variable.ttf') format('truetype');
+  font-weight: 400 700;
+  font-display: swap;
+  font-style: normal;
+}
+/**
+* This is a variable font
+* You can control variable axes as shown below:
+* font-variation-settings: wght 400.0;
+*
+* available axes:
+'wght' (range from 400.0 to 700.0
+*/
+@font-face {
+  font-family: 'FamiljenGrotesk-VariableItalic';
+  src: url('../fonts/FamiljenGrotesk-VariableItalic.woff2') format('woff2'),
+       url('../fonts/FamiljenGrotesk-VariableItalic.woff') format('woff'),
+       url('../fonts/FamiljenGrotesk-VariableItalic.ttf') format('truetype');
+  font-weight: 400 700;
+  font-display: swap;
+  font-style: italic;
+}
+

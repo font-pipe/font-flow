@@ -20,6 +20,7 @@ Usage:
 """
 import argparse
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -31,7 +32,10 @@ from google.protobuf import text_format
 from gfmetadata import fonts_public_pb2
 import gfsubsets
 
-ALLOWED_LICENSES = {"OFL", "OFL-1.1", "Apache-2.0", "APACHE2", "MIT", "UFL", "UFL-1.0", "CC0"}
+# FFL = Fontshare/Indian Type Foundry's own "Free Font License" — added here
+# for the ITF source below. Confirm FFL's terms actually permit this kind of
+# redistribution before shipping a real foundry drop under it.
+ALLOWED_LICENSES = {"OFL", "OFL-1.1", "Apache-2.0", "APACHE2", "MIT", "UFL", "UFL-1.0", "CC0", "FFL"}
 LICENSE_FILENAMES = ["OFL.txt", "LICENSE.txt", "UFL.txt", "LICENSE"]
 
 # Used only as a fallback, and only when a font's OS/2.usWeightClass and its
@@ -117,6 +121,63 @@ def extract_style_weight_from_tables(font_path: Path):
     return style, str(table_weight)
 
 
+def find_itf_css(family_dir: Path):
+    """ITF/Fontshare-style drop (manual/itf/<family>/Fonts/WEB/css/*.css)
+    identifies itself by this path; fonts arrive pre-built as woff2."""
+    css_dir = family_dir / "Fonts" / "WEB" / "css"
+    if not css_dir.exists():
+        return None
+    css_files = sorted(css_dir.glob("*.css"))
+    return css_files[0] if css_files else None
+
+
+def read_itf_metadata(family_dir: Path, css_path: Path):
+    """ITF source: no family.yaml sidecar — family name comes from the
+    css header comment, weight/style/filename come from each @font-face
+    block, and the woff2 files are copied as-is rather than re-subset."""
+    css_text = css_path.read_text()
+
+    family_match = re.search(r"Font Family:\s*(.+)", css_text)
+    if not family_match:
+        raise ValueError("no 'Font Family:' line found in css header comment")
+    family = family_match.group(1).strip()
+
+    license_file = family_dir / "License" / "FFL.txt"
+    if not license_file.exists():
+        raise ValueError(f"expected {license_file} (ITF/Fontshare Free Font License)")
+    if "FFL" not in ALLOWED_LICENSES:
+        raise ValueError("license 'FFL' not in allowlist")
+
+    fonts_dir = family_dir / "Fonts" / "WEB" / "fonts"
+    faces = []
+    for block in re.finditer(r"@font-face\s*\{([^}]+)\}", css_text):
+        body = block.group(1)
+        weight_m = re.search(r"font-weight:\s*([\d\s]+);", body)
+        style_m = re.search(r"font-style:\s*(\w+);", body)
+        src_m = re.search(r"url\(['\"]?[^'\"]*?/([^/'\")]+\.woff2)['\"]?\)", body)
+        if not (weight_m and style_m and src_m):
+            continue
+        faces.append({
+            "path": fonts_dir / src_m.group(1),
+            "style": style_m.group(1).strip(),
+            "weight": " ".join(weight_m.group(1).split()),
+        })
+
+    if not faces:
+        raise ValueError(f"no usable @font-face blocks found in {css_path}")
+
+    return {
+        "family": family,
+        "license": "FFL",
+        "designer": "Unknown",
+        "category": ["unknown"],
+        "declared_subsets": None,
+        "fonts": faces,
+        "license_file": license_file,
+        "prebuilt": True,
+    }
+
+
 def read_manual_metadata(family_dir: Path):
     """Non-Google source: family.yaml sidecar supplies what we can't derive
     from the font file itself (chiefly: license)."""
@@ -194,8 +255,14 @@ def build_woff2(font_path: Path, codepoints, out_path: Path):
 
 def process_family(family_dir: Path, out_root: Path, manifest_entries: list):
     is_google = (family_dir / "METADATA.pb").exists()
+    itf_css = None if is_google else find_itf_css(family_dir)
     try:
-        meta = read_metadata_pb(family_dir) if is_google else read_manual_metadata(family_dir)
+        if is_google:
+            meta = read_metadata_pb(family_dir)
+        elif itf_css:
+            meta = read_itf_metadata(family_dir, itf_css)
+        else:
+            meta = read_manual_metadata(family_dir)
     except Exception as e:
         print(f"SKIP {family_dir.name}: {e}", file=sys.stderr)
         return
@@ -204,17 +271,37 @@ def process_family(family_dir: Path, out_root: Path, manifest_entries: list):
     family_out = out_root / slug
     family_out.mkdir(parents=True, exist_ok=True)
 
-    license_file = find_license_file(family_dir)
+    license_file = meta.get("license_file") or find_license_file(family_dir)
     if license_file:
         shutil.copy(license_file, family_out / license_file.name)
 
     files_entry = []
     all_subsets = set()
 
+    prebuilt = meta.get("prebuilt", False)
     for f in meta["fonts"]:
         font = TTFont(str(f["path"]), lazy=True)
         cmap_keys = set(font.getBestCmap().keys())
         subsets = detect_subsets(f["path"], meta["declared_subsets"])
+
+        if prebuilt:
+            covered = set()
+            for subset_name in subsets:
+                cps = codepoints_for_subset(subset_name, cmap_keys)
+                if cps:
+                    covered.update(cps)
+                    all_subsets.add(subset_name)
+            if not covered:
+                continue
+            out_name = f"{slug}-{f['style']}-{f['weight'].replace(' ', '_')}.woff2"
+            shutil.copy(f["path"], family_out / out_name)
+            files_entry.append({
+                "path": f"{slug}/{out_name}",
+                "weight": f["weight"],
+                "style": f["style"],
+                "unicodeRange": unicode_range_string(covered),
+            })
+            continue
 
         for subset_name in subsets:
             cps = codepoints_for_subset(subset_name, cmap_keys)

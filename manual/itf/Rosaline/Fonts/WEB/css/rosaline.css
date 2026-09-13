@@ -1,0 +1,22 @@
+/**
+* @license
+*
+* Font Family: Rosaline
+* Designed by: Jérémie Hornus
+* URL: https://www.fontshare.com/fonts/rosaline
+* © 2026 Indian Type Foundry
+*
+* Rosaline Regular 
+
+*
+*/
+@font-face {
+  font-family: 'Rosaline-Regular';
+  src: url('../fonts/Rosaline-Regular.woff2') format('woff2'),
+       url('../fonts/Rosaline-Regular.woff') format('woff'),
+       url('../fonts/Rosaline-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+
