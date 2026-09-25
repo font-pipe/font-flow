@@ -1,0 +1,1171 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+files/
+  adwaita-sans-latin-100-italic.woff
+  adwaita-sans-latin-100-italic.woff2
+  adwaita-sans-latin-100-normal.woff
+  adwaita-sans-latin-100-normal.woff2
+  adwaita-sans-latin-200-italic.woff
+  adwaita-sans-latin-200-italic.woff2
+  adwaita-sans-latin-200-normal.woff
+  adwaita-sans-latin-200-normal.woff2
+  adwaita-sans-latin-300-italic.woff
+  adwaita-sans-latin-300-italic.woff2
+  adwaita-sans-latin-300-normal.woff
+  adwaita-sans-latin-300-normal.woff2
+  adwaita-sans-latin-400-italic.woff
+  adwaita-sans-latin-400-italic.woff2
+  adwaita-sans-latin-400-normal.woff
+  adwaita-sans-latin-400-normal.woff2
+  adwaita-sans-latin-500-italic.woff
+  adwaita-sans-latin-500-italic.woff2
+  adwaita-sans-latin-500-normal.woff
+  adwaita-sans-latin-500-normal.woff2
+  adwaita-sans-latin-600-italic.woff
+  adwaita-sans-latin-600-italic.woff2
+  adwaita-sans-latin-600-normal.woff
+  adwaita-sans-latin-600-normal.woff2
+  adwaita-sans-latin-700-italic.woff
+  adwaita-sans-latin-700-italic.woff2
+  adwaita-sans-latin-700-normal.woff
+  adwaita-sans-latin-700-normal.woff2
+  adwaita-sans-latin-800-italic.woff
+  adwaita-sans-latin-800-italic.woff2
+  adwaita-sans-latin-800-normal.woff
+  adwaita-sans-latin-800-normal.woff2
+  adwaita-sans-latin-900-italic.woff
+  adwaita-sans-latin-900-italic.woff2
+  adwaita-sans-latin-900-normal.woff
+  adwaita-sans-latin-900-normal.woff2
+scss/
+  metadata.scss
+  mixins.scss
+100-italic.css
+100.css
+200-italic.css
+200.css
+300-italic.css
+300.css
+400-italic.css
+400.css
+500-italic.css
+500.css
+600-italic.css
+600.css
+700-italic.css
+700.css
+800-italic.css
+800.css
+900-italic.css
+900.css
+CHANGELOG.md
+index.css
+index.d.css.ts
+latin-100-italic.css
+latin-100.css
+latin-200-italic.css
+latin-200.css
+latin-300-italic.css
+latin-300.css
+latin-400-italic.css
+latin-400.css
+latin-500-italic.css
+latin-500.css
+latin-600-italic.css
+latin-600.css
+latin-700-italic.css
+latin-700.css
+latin-800-italic.css
+latin-800.css
+latin-900-italic.css
+latin-900.css
+latin-italic.css
+latin.css
+LICENSE
+metadata.json
+package.json
+README.md
+unicode.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="scss/metadata.scss">
+$id: 'adwaita-sans';
+$family: 'Adwaita Sans';
+$category: sans-serif;
+$subsets: (latin);
+$weights: (100, 200, 300, 400, 500, 600, 700, 800, 900);
+$styles: (normal, italic);
+$axes: null;
+$defaults: (
+	subset: latin,
+	weight: 400,
+	style: normal,
+	axis: null,
+);
+$unicode: null;
+
+$metadata: (
+  id: $id,
+  family: $family,
+  category: $category,
+  subsets: $subsets,
+  weights: $weights,
+  styles: $styles,
+  axes: $axes,
+  defaults: $defaults,
+  unicode: $unicode,
+) !default;
+</file>
+
+<file path="scss/mixins.scss">
+@use 'sass:list';
+@use 'sass:map';
+@use 'sass:math';
+@use 'sass:meta';
+@use 'sass:string';
+
+@use 'metadata';
+
+$metadata: metadata.$metadata !default;
+$directory: null !default;
+
+$family: null !default;
+$display: null !default;
+$formats: null !default;
+$subsets: null !default;
+$weights: null !default;
+$styles: null !default;
+$axes: null !default;
+
+// Deprecated
+$displayVar: null !default;
+
+@mixin generator(
+  $metadata: $metadata,
+  $directory: $directory,
+  $family: $family,
+  $display: $display,
+  $formats: $formats,
+  $subsets: $subsets,
+  $weights: $weights,
+  $styles: $styles,
+  $axes: $axes,
+
+  // Deprecated
+  $displayVar: $displayVar
+) {
+  @warn "Importing mixins via the fontsource package is deprecated and will be removed in the next major release. Please use the @fontsource-utils/scss package instead.";
+
+  @if $displayVar != null {
+    @warn "$displayVar is deprecated due to the limitation of using css variables in @font-face (https://github.com/fontsource/fontsource/issues/726).";
+  }
+
+  $isVariable: map.get($metadata, axes) != null;
+
+  $directory: if(
+    $directory,
+    $directory,
+    '~@fontsource#{if($isVariable, '-variable', '')}/#{map.get($metadata, id)}/files'
+  );
+
+  $family: if($family, $family, map.get($metadata, family) + if($isVariable, ' Variable', ''));
+  $display: if($display, $display, swap);
+  $formats: if(not $formats or $formats == all, if($isVariable, woff2, (woff2, woff)), $formats);
+  $subsets: if(
+    $subsets,
+    if($subsets == all, map.get($metadata, subsets), $subsets),
+    map.get($metadata, subsets)
+  );
+  $weights: if(
+    $weights,
+    if($weights == all, map.get($metadata, weights), $weights),
+    map.get($metadata, defaults, weight)
+  );
+  $styles: if(
+    $styles,
+    if($styles == all, map.get($metadata, styles), $styles),
+    map.get($metadata, defaults, style)
+  );
+  $axes: if(
+    $axes,
+    if($axes == all, full, $axes),
+    if($isVariable, if(map.has-key($metadata, axes, wght), wght, full), null)
+  );
+
+  @each $subset in $subsets {
+    @each $unicodeSubset, $unicodeRange in map.get($metadata, unicode) {
+      // If condition is true, generate faces for the current subset
+      @if (
+      	// If there is no unicode information for the font or
+        ($unicodeSubset == null) or
+        	// If the subset match a unicode subset or
+        	($subset == $unicodeSubset) or
+						(
+							// If $unicodeSubset is a numeric unicode subset
+							// and current subset exists in the list of font subsets but does not match any unicode subset
+							// then generate faces for this numeric unicode subset as it is representing part of the current subset
+							list.index(map.get($metadata, subsets), $subset) and not
+								map.has-key($metadata, unicode, $subset) and not
+									list.index(map.get($metadata, subsets), $unicodeSubset)
+						)
+      ) {
+        @each $weight in if($axes, null, $weights) {
+          @each $axis in $axes {
+            @each $style in $styles {
+              $variant: '#{map.get($metadata, id)}-#{if($unicodeSubset, $unicodeSubset, $subset)}-#{if($axis, $axis, $weight)}-#{$style}';
+
+              $src: ();
+              @each $format in $formats {
+                $src: list.append(
+                  $src,
+                  url('#{$directory}/#{$variant}.#{$format}')
+                    format('#{$format}#{if($axis, '-variations', '')}'),
+                  comma
+                );
+              }
+
+              @content ((
+                metadata: $metadata,
+                directory: $directory,
+                family: $family,
+                display: $display,
+                formats: $formats,
+                subsets: $subsets,
+                weights: $weights,
+                styles: $styles,
+                axes: $axes,
+
+                variant: $variant,
+                subset: $subset,
+                unicodeSubset: $unicodeSubset,
+                unicodeRange: $unicodeRange,
+                weight: $weight,
+                axis: $axis,
+                style: $style,
+
+                font-family: string.quote($family),
+                font-style: if(
+                  (($axis == full) or ($axis == slnt)) and map.has-key($metadata, axes, slnt),
+                  oblique map.get($metadata, axes, slnt, min) + deg map.get($metadata, axes, slnt, max) + deg,
+                  $style
+                ),
+                font-display: $display,
+                font-weight: if(
+                  (($axis == full) or ($axis == wght)) and map.has-key($metadata, axes, wght),
+                  map.get($metadata, axes, wght, min) map.get($metadata, axes, wght, max),
+                  $weight
+                ),
+                font-stretch: if(
+                  (($axis == full) or ($axis == wdth)) and map.has-key($metadata, axes, wdth),
+                  '#{map.get($metadata, axes, wdth, min)}% #{map.get($metadata, axes, wdth, max)}%',
+                  null
+                ),
+                src: $src,
+                unicode-range: $unicodeRange,
+              ));
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@mixin faces(
+  $metadata: $metadata,
+  $directory: $directory,
+  $family: $family,
+  $display: $display,
+  $formats: $formats,
+  $subsets: $subsets,
+  $weights: $weights,
+  $styles: $styles,
+  $axes: $axes,
+
+  // Deprecated
+  $displayVar: $displayVar
+) {
+  @include generator(
+      $metadata: $metadata,
+      $directory: $directory,
+      $family: $family,
+      $display: $display,
+      $formats: $formats,
+      $subsets: $subsets,
+      $weights: $weights,
+      $styles: $styles,
+      $axes: $axes,
+
+      $displayVar: $displayVar
+    )
+    using ($props) {
+    /* #{map.get($props, variant)} */
+    @font-face {
+      font-family: map.get($props, font-family);
+      font-style: map.get($props, font-style);
+      font-display: map.get($props, font-display);
+      font-weight: map.get($props, font-weight);
+      font-stretch: map.get($props, font-stretch);
+      unicode-range: map.get($props, unicode-range);
+      src: map.get($props, src);
+    }
+  }
+}
+</file>
+
+<file path="100-italic.css">
+/* adwaita-sans-latin-100-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 100;
+  src: url(./files/adwaita-sans-latin-100-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-100-italic.woff) format('woff');
+}
+</file>
+
+<file path="100.css">
+/* adwaita-sans-latin-100-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100;
+  src: url(./files/adwaita-sans-latin-100-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-100-normal.woff) format('woff');
+}
+</file>
+
+<file path="200-italic.css">
+/* adwaita-sans-latin-200-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 200;
+  src: url(./files/adwaita-sans-latin-200-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-200-italic.woff) format('woff');
+}
+</file>
+
+<file path="200.css">
+/* adwaita-sans-latin-200-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200;
+  src: url(./files/adwaita-sans-latin-200-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-200-normal.woff) format('woff');
+}
+</file>
+
+<file path="300-italic.css">
+/* adwaita-sans-latin-300-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 300;
+  src: url(./files/adwaita-sans-latin-300-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-300-italic.woff) format('woff');
+}
+</file>
+
+<file path="300.css">
+/* adwaita-sans-latin-300-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300;
+  src: url(./files/adwaita-sans-latin-300-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-300-normal.woff) format('woff');
+}
+</file>
+
+<file path="400-italic.css">
+/* adwaita-sans-latin-400-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url(./files/adwaita-sans-latin-400-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-400-italic.woff) format('woff');
+}
+</file>
+
+<file path="400.css">
+/* adwaita-sans-latin-400-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(./files/adwaita-sans-latin-400-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-400-normal.woff) format('woff');
+}
+</file>
+
+<file path="500-italic.css">
+/* adwaita-sans-latin-500-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 500;
+  src: url(./files/adwaita-sans-latin-500-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-500-italic.woff) format('woff');
+}
+</file>
+
+<file path="500.css">
+/* adwaita-sans-latin-500-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(./files/adwaita-sans-latin-500-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-500-normal.woff) format('woff');
+}
+</file>
+
+<file path="600-italic.css">
+/* adwaita-sans-latin-600-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 600;
+  src: url(./files/adwaita-sans-latin-600-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-600-italic.woff) format('woff');
+}
+</file>
+
+<file path="600.css">
+/* adwaita-sans-latin-600-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(./files/adwaita-sans-latin-600-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-600-normal.woff) format('woff');
+}
+</file>
+
+<file path="700-italic.css">
+/* adwaita-sans-latin-700-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 700;
+  src: url(./files/adwaita-sans-latin-700-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-700-italic.woff) format('woff');
+}
+</file>
+
+<file path="700.css">
+/* adwaita-sans-latin-700-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(./files/adwaita-sans-latin-700-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-700-normal.woff) format('woff');
+}
+</file>
+
+<file path="800-italic.css">
+/* adwaita-sans-latin-800-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 800;
+  src: url(./files/adwaita-sans-latin-800-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-800-italic.woff) format('woff');
+}
+</file>
+
+<file path="800.css">
+/* adwaita-sans-latin-800-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 800;
+  src: url(./files/adwaita-sans-latin-800-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-800-normal.woff) format('woff');
+}
+</file>
+
+<file path="900-italic.css">
+/* adwaita-sans-latin-900-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 900;
+  src: url(./files/adwaita-sans-latin-900-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-900-italic.woff) format('woff');
+}
+</file>
+
+<file path="900.css">
+/* adwaita-sans-latin-900-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url(./files/adwaita-sans-latin-900-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-900-normal.woff) format('woff');
+}
+</file>
+
+<file path="CHANGELOG.md">
+# Changelog
+See the [Fontsource CHANGELOG.md](https://github.com/fontsource/fontsource/blob/main/CHANGELOG.md).
+</file>
+
+<file path="index.css">
+/* adwaita-sans-latin-400-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(./files/adwaita-sans-latin-400-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-400-normal.woff) format('woff');
+}
+</file>
+
+<file path="index.d.css.ts">
+export {};
+</file>
+
+<file path="latin-100-italic.css">
+/* adwaita-sans-latin-100-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 100;
+  src: url(./files/adwaita-sans-latin-100-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-100-italic.woff) format('woff');
+}
+</file>
+
+<file path="latin-100.css">
+/* adwaita-sans-latin-100-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100;
+  src: url(./files/adwaita-sans-latin-100-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-100-normal.woff) format('woff');
+}
+</file>
+
+<file path="latin-200-italic.css">
+/* adwaita-sans-latin-200-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 200;
+  src: url(./files/adwaita-sans-latin-200-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-200-italic.woff) format('woff');
+}
+</file>
+
+<file path="latin-200.css">
+/* adwaita-sans-latin-200-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200;
+  src: url(./files/adwaita-sans-latin-200-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-200-normal.woff) format('woff');
+}
+</file>
+
+<file path="latin-300-italic.css">
+/* adwaita-sans-latin-300-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 300;
+  src: url(./files/adwaita-sans-latin-300-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-300-italic.woff) format('woff');
+}
+</file>
+
+<file path="latin-300.css">
+/* adwaita-sans-latin-300-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300;
+  src: url(./files/adwaita-sans-latin-300-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-300-normal.woff) format('woff');
+}
+</file>
+
+<file path="latin-400-italic.css">
+/* adwaita-sans-latin-400-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url(./files/adwaita-sans-latin-400-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-400-italic.woff) format('woff');
+}
+</file>
+
+<file path="latin-400.css">
+/* adwaita-sans-latin-400-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(./files/adwaita-sans-latin-400-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-400-normal.woff) format('woff');
+}
+</file>
+
+<file path="latin-500-italic.css">
+/* adwaita-sans-latin-500-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 500;
+  src: url(./files/adwaita-sans-latin-500-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-500-italic.woff) format('woff');
+}
+</file>
+
+<file path="latin-500.css">
+/* adwaita-sans-latin-500-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(./files/adwaita-sans-latin-500-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-500-normal.woff) format('woff');
+}
+</file>
+
+<file path="latin-600-italic.css">
+/* adwaita-sans-latin-600-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 600;
+  src: url(./files/adwaita-sans-latin-600-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-600-italic.woff) format('woff');
+}
+</file>
+
+<file path="latin-600.css">
+/* adwaita-sans-latin-600-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(./files/adwaita-sans-latin-600-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-600-normal.woff) format('woff');
+}
+</file>
+
+<file path="latin-700-italic.css">
+/* adwaita-sans-latin-700-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 700;
+  src: url(./files/adwaita-sans-latin-700-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-700-italic.woff) format('woff');
+}
+</file>
+
+<file path="latin-700.css">
+/* adwaita-sans-latin-700-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(./files/adwaita-sans-latin-700-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-700-normal.woff) format('woff');
+}
+</file>
+
+<file path="latin-800-italic.css">
+/* adwaita-sans-latin-800-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 800;
+  src: url(./files/adwaita-sans-latin-800-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-800-italic.woff) format('woff');
+}
+</file>
+
+<file path="latin-800.css">
+/* adwaita-sans-latin-800-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 800;
+  src: url(./files/adwaita-sans-latin-800-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-800-normal.woff) format('woff');
+}
+</file>
+
+<file path="latin-900-italic.css">
+/* adwaita-sans-latin-900-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 900;
+  src: url(./files/adwaita-sans-latin-900-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-900-italic.woff) format('woff');
+}
+</file>
+
+<file path="latin-900.css">
+/* adwaita-sans-latin-900-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url(./files/adwaita-sans-latin-900-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-900-normal.woff) format('woff');
+}
+</file>
+
+<file path="latin-italic.css">
+/* adwaita-sans-latin-100-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 100;
+  src: url(./files/adwaita-sans-latin-100-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-100-italic.woff) format('woff');
+}
+
+/* adwaita-sans-latin-200-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 200;
+  src: url(./files/adwaita-sans-latin-200-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-200-italic.woff) format('woff');
+}
+
+/* adwaita-sans-latin-300-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 300;
+  src: url(./files/adwaita-sans-latin-300-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-300-italic.woff) format('woff');
+}
+
+/* adwaita-sans-latin-400-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url(./files/adwaita-sans-latin-400-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-400-italic.woff) format('woff');
+}
+
+/* adwaita-sans-latin-500-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 500;
+  src: url(./files/adwaita-sans-latin-500-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-500-italic.woff) format('woff');
+}
+
+/* adwaita-sans-latin-600-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 600;
+  src: url(./files/adwaita-sans-latin-600-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-600-italic.woff) format('woff');
+}
+
+/* adwaita-sans-latin-700-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 700;
+  src: url(./files/adwaita-sans-latin-700-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-700-italic.woff) format('woff');
+}
+
+/* adwaita-sans-latin-800-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 800;
+  src: url(./files/adwaita-sans-latin-800-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-800-italic.woff) format('woff');
+}
+
+/* adwaita-sans-latin-900-italic */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 900;
+  src: url(./files/adwaita-sans-latin-900-italic.woff2) format('woff2'), url(./files/adwaita-sans-latin-900-italic.woff) format('woff');
+}
+</file>
+
+<file path="latin.css">
+/* adwaita-sans-latin-100-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100;
+  src: url(./files/adwaita-sans-latin-100-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-100-normal.woff) format('woff');
+}
+
+/* adwaita-sans-latin-200-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200;
+  src: url(./files/adwaita-sans-latin-200-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-200-normal.woff) format('woff');
+}
+
+/* adwaita-sans-latin-300-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300;
+  src: url(./files/adwaita-sans-latin-300-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-300-normal.woff) format('woff');
+}
+
+/* adwaita-sans-latin-400-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(./files/adwaita-sans-latin-400-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-400-normal.woff) format('woff');
+}
+
+/* adwaita-sans-latin-500-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(./files/adwaita-sans-latin-500-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-500-normal.woff) format('woff');
+}
+
+/* adwaita-sans-latin-600-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(./files/adwaita-sans-latin-600-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-600-normal.woff) format('woff');
+}
+
+/* adwaita-sans-latin-700-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(./files/adwaita-sans-latin-700-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-700-normal.woff) format('woff');
+}
+
+/* adwaita-sans-latin-800-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 800;
+  src: url(./files/adwaita-sans-latin-800-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-800-normal.woff) format('woff');
+}
+
+/* adwaita-sans-latin-900-normal */
+@font-face {
+  font-family: 'Adwaita Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url(./files/adwaita-sans-latin-900-normal.woff2) format('woff2'), url(./files/adwaita-sans-latin-900-normal.woff) format('woff');
+}
+</file>
+
+<file path="LICENSE">
+Copyright (c) 2016, The Inter Project Authors (https://github.com/rsms/inter)
+Copyright (c) 2015-2025, Renzhi Li (aka. Belleve Invis, belleve@typeof.net)
+Copyright (c) 2025, Jamie Gravendeel (https://jamie.garden)
+Copyright (c) 2025, Florian Müllner
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+https://openfontlicense.org
+
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded,
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION & CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+</file>
+
+<file path="metadata.json">
+{
+  "id": "adwaita-sans",
+  "family": "Adwaita Sans",
+  "subsets": ["latin"],
+  "weights": [100, 200, 300, 400, 500, 600, 700, 800, 900],
+  "styles": ["normal", "italic"],
+  "defSubset": "latin",
+  "variable": false,
+  "lastModified": "2025-12-21",
+  "version": "49.0",
+  "category": "sans-serif",
+  "license": {
+    "type": "OFL-1.1",
+    "url": "https://gitlab.gnome.org/GNOME/adwaita-fonts/-/raw/main/LICENSE?ref_type=heads",
+    "attribution": "The GNOME Project (based on Inter by Rasmus Andersson)"
+  },
+  "source": "https://gitlab.gnome.org/GNOME/adwaita-fonts",
+  "type": "other"
+}
+</file>
+
+<file path="package.json">
+{
+  "name": "@fontsource/adwaita-sans",
+  "version": "5.3.0",
+  "description": "Self-host the Adwaita Sans font in a neatly bundled NPM package.",
+  "main": "index.css",
+  "types": "index.d.css.ts",
+  "publishConfig": {"access": "public"},
+  "keywords": [
+    "fontsource",
+    "font",
+    "font family",
+    "google fonts",
+    "adwaita-sans",
+    "Adwaita Sans",
+    "css",
+    "sass",
+    "front-end",
+    "web",
+    "typeface",
+    "variable"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.css.ts",
+      "sass": "./index.css",
+      "default": "./index.css"
+    },
+    "./LICENSE": "./LICENSE",
+    "./*": {"sass": "./*.css", "default": "./*.css"},
+    "./*.css": {"sass": "./*.css", "default": "./*.css"},
+    "./files/*": {"sass": "./files/*", "default": "./files/*"},
+    "./files/*.woff": {"sass": "./files/*.woff", "default": "./files/*.woff"},
+    "./files/*.woff2": {
+      "sass": "./files/*.woff2",
+      "default": "./files/*.woff2"
+    },
+    "./package.json": "./package.json",
+    "./metadata.json": "./metadata.json",
+    "./unicode.json": "./unicode.json",
+    "./scss": {"sass": "./scss/metadata.scss"}
+  },
+  "author": "The GNOME Project (based on Inter by Rasmus Andersson)",
+  "license": "OFL-1.1",
+  "homepage": "https://fontsource.org/fonts/adwaita-sans",
+  "funding": "https://github.com/sponsors/ayuhito",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fontsource/font-files.git",
+    "directory": "fonts/other/adwaita-sans"
+  },
+  "publishHash": "74bab5cd3e8cc105"
+}
+</file>
+
+<file path="README.md">
+# Fontsource Adwaita Sans
+
+[![npm (scoped)](https://img.shields.io/npm/v/@fontsource/adwaita-sans?color=brightgreen)](https://www.npmjs.com/package/@fontsource/adwaita-sans) [![Generic badge](https://img.shields.io/badge/fontsource-passing-brightgreen)](https://github.com/fontsource/fontsource) [![Monthly downloads](https://badgen.net/npm/dm/@fontsource/adwaita-sans)](https://github.com/fontsource/fontsource) [![Total downloads](https://badgen.net/npm/dt/@fontsource/adwaita-sans)](https://github.com/fontsource/fontsource)
+
+The CSS and web font files to easily self-host the “Adwaita Sans” font. Please visit the main [Fontsource website](https://fontsource.org/fonts/adwaita-sans) to view more details on this package.
+
+## Quick Installation
+
+Fontsource offers multiple methods to import the CSS, including using a bundler like Vite or using SASS. You can find full documentation [here](https://fontsource.org/docs/getting-started/introduction).
+
+```javascript
+npm install @fontsource/adwaita-sans
+```
+
+Within your app entry file or site component, import it in.
+
+```javascript
+import "@fontsource/adwaita-sans"; // Defaults to weight 400
+import "@fontsource/adwaita-sans/400.css"; // Specify weight
+import "@fontsource/adwaita-sans/400-italic.css"; // Specify weight and style
+```
+
+Supported variables:
+- Weights: `[100,200,300,400,500,600,700,800,900]`
+- Styles: `[normal,italic]`
+- Subsets: `[latin]`
+
+> Note: `italic` may not be supported by all fonts. To learn more about what weights and styles are supported, please visit the [Fontsource website](https://fontsource.org/fonts/adwaita-sans).
+
+Finally, you can reference the font name in a CSS stylesheet, CSS Module, or CSS-in-JS.
+
+```css
+body {
+  font-family: "Adwaita Sans";
+}
+```
+
+## Licensing
+Always make sure to read the license for each font you use. Most of the fonts in the collection use the SIL Open Font License, v1.1. Some fonts use the Apache 2 license. The Ubuntu fonts use the Ubuntu Font License v1.0.
+
+The GNOME Project (based on Inter by Rasmus Andersson)
+[OFL-1.1](https://gitlab.gnome.org/GNOME/adwaita-fonts/-/raw/main/LICENSE?ref_type=heads)
+
+## Other Notes
+Font version (provided by source): `49.0`.
+
+If you have any suggestions or ideas to improve the performance of font loading or expand the existing library, feel free to star and contribute to this repository. You can share your suggestions or ideas by creating an [issue](https://github.com/fontsource/fontsource/issues).
+</file>
+
+<file path="unicode.json">
+{}
+</file>
+
+</files>
