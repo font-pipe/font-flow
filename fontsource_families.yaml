@@ -1,0 +1,13 @@
+# Fontsource packages to pull automatically from the npm registry, one per
+# line, using the package name WITHOUT the "@fontsource/" prefix (e.g.
+# "inter" for the @fontsource/inter package).
+#
+# To add a font: find its package name at https://fontsource.org and add it
+# here. To update everything to whatever's currently published, just re-run
+# the Action (Actions tab → "Build and deploy fonts" → Run workflow) — no
+# code change needed.
+#
+# For anything you'd rather drop in by hand instead, see
+# manual/manual-fonts-README.md.
+
+families:

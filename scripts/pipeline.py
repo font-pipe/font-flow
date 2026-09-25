@@ -189,6 +189,64 @@ def read_itf_metadata(family_dir: Path, css_path: Path):
     }
 
 
+def find_fontsource_metadata(family_dir: Path):
+    """Fontsource-style drop (manual/fontsource/<family>/metadata.json +
+    files/*.woff2) identifies itself by metadata.json sitting directly in
+    the family folder, with a sibling files/ directory of pre-built,
+    pre-subset woff2s."""
+    meta_path = family_dir / "metadata.json"
+    if meta_path.exists() and (family_dir / "files").is_dir():
+        return meta_path
+    return None
+
+
+def parse_fontsource_filename(stem: str, font_id: str):
+    """Fontsource woff2 filenames are '{id}-{subset}-{weight}-{style}', e.g.
+    'adwaita-sans-latin-400-italic'. Strip the known id prefix, then peel
+    style and weight off the right so any hyphens inside the subset name
+    itself (e.g. 'latin-ext') are preserved."""
+    prefix = f"{font_id}-"
+    if not stem.startswith(prefix):
+        return None
+    parts = stem[len(prefix):].split("-")
+    if len(parts) < 3:
+        return None
+    style, weight = parts[-1], parts[-2]
+    subset = "-".join(parts[:-2])
+    return subset, weight, style
+
+
+def read_fontsource_metadata(family_dir: Path, meta_path: Path):
+    """Fontsource source: metadata.json supplies family/license/category,
+    and each file under files/*.woff2 is already pre-built and pre-subset
+    per weight/style/subset — no re-subsetting needed, just copy each file
+    through under the one subset its filename says it is."""
+    meta_json = json.loads(meta_path.read_text())
+    license_type = meta_json.get("license", {}).get("type")
+    if license_type not in ALLOWED_LICENSES:
+        raise ValueError(f"license '{license_type}' not in allowlist {sorted(ALLOWED_LICENSES)}")
+
+    font_id = meta_json["id"]
+    fonts = []
+    for font_path in sorted((family_dir / "files").glob("*.woff2")):
+        parsed = parse_fontsource_filename(font_path.stem, font_id)
+        if not parsed:
+            print(f"  ! skipping unrecognized filename shape: {font_path.name}", file=sys.stderr)
+            continue
+        subset, weight, style = parsed
+        fonts.append({"path": font_path, "style": style, "weight": weight, "subset": subset})
+
+    return {
+        "family": meta_json["family"],
+        "license": license_type,
+        "designer": meta_json.get("license", {}).get("attribution", "Unknown"),
+        "category": [meta_json.get("category", "unknown")],
+        "declared_subsets": None,  # unused — each file already carries its own subset
+        "fonts": fonts,
+        "prebuilt": True,
+    }
+
+
 def read_manual_metadata(family_dir: Path):
     """Non-Google source: family.yaml sidecar supplies what we can't derive
     from the font file itself (chiefly: license)."""
@@ -199,8 +257,12 @@ def read_manual_metadata(family_dir: Path):
     if meta.get("license") not in ALLOWED_LICENSES:
         raise ValueError(f"license '{meta.get('license')}' not in allowlist {sorted(ALLOWED_LICENSES)}")
 
+    woff2_paths = sorted(family_dir.glob("*.woff2"))
+    prebuilt = bool(woff2_paths)
+    font_paths = woff2_paths if prebuilt else sorted(list(family_dir.glob("*.ttf")) + list(family_dir.glob("*.otf")))
+
     fonts = []
-    for font_path in sorted(list(family_dir.glob("*.ttf")) + list(family_dir.glob("*.otf"))):
+    for font_path in font_paths:
         style, weight = extract_style_weight_from_tables(font_path)
         fonts.append({"path": font_path, "style": style, "weight": weight})
 
@@ -211,6 +273,7 @@ def read_manual_metadata(family_dir: Path):
         "category": [meta.get("category", "unknown")],
         "declared_subsets": None,  # unknown up front — detect from the font's own coverage
         "fonts": fonts,
+        "prebuilt": prebuilt,
     }
 
 
@@ -267,11 +330,14 @@ def build_woff2(font_path: Path, codepoints, out_path: Path):
 def process_family(family_dir: Path, out_root: Path, manifest_entries: list):
     is_google = (family_dir / "METADATA.pb").exists()
     itf_css = None if is_google else find_itf_css(family_dir)
+    fontsource_meta = None if (is_google or itf_css) else find_fontsource_metadata(family_dir)
     try:
         if is_google:
             meta = read_metadata_pb(family_dir)
         elif itf_css:
             meta = read_itf_metadata(family_dir, itf_css)
+        elif fontsource_meta:
+            meta = read_fontsource_metadata(family_dir, fontsource_meta)
         else:
             meta = read_manual_metadata(family_dir)
     except Exception as e:
@@ -293,6 +359,30 @@ def process_family(family_dir: Path, out_root: Path, manifest_entries: list):
     for f in meta["fonts"]:
         font = TTFont(str(f["path"]), lazy=True)
         cmap_keys = set(font.getBestCmap().keys())
+
+        if "subset" in f:
+            # Fontsource: this exact file is already pre-subset to one named
+            # subset — trust that instead of testing it against every subset
+            # in the family (which is what the prebuilt path below does for
+            # ITF's one-file-covers-everything drops).
+            try:
+                cps = codepoints_for_subset(f["subset"], cmap_keys)
+            except Exception as e:
+                print(f"  ! skipping {f['path'].name}: unrecognized subset '{f['subset']}' ({e})", file=sys.stderr)
+                continue
+            if not cps:
+                continue
+            out_name = f"{slug}-{f['style']}-{f['subset']}-{f['weight']}.woff2"
+            shutil.copy(f["path"], family_out / out_name)
+            files_entry.append({
+                "path": f"{slug}/{out_name}",
+                "weight": f["weight"],
+                "style": f["style"],
+                "unicodeRange": unicode_range_string(cps),
+            })
+            all_subsets.add(f["subset"])
+            continue
+
         subsets = detect_subsets(f["path"], meta["declared_subsets"])
 
         if prebuilt:

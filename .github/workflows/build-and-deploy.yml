@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "families.yaml"
+      - "fontsource_families.yaml"
       - "manual/**"
       - "scripts/**"
       - ".github/workflows/build-and-deploy.yml"
@@ -38,6 +39,9 @@ jobs:
       - name: Fetch requested families from google/fonts
         run: python3 scripts/fetch_google_families.py
 
+      - name: Fetch requested families from Fontsource
+        run: python3 scripts/fetch_fontsource_families.py
+
       - name: Restore previous dist (for additive builds)
         uses: actions/cache/restore@v4
         with:
@@ -49,7 +53,7 @@ jobs:
       - name: Build woff2 files + manifest
         run: |
           python3 scripts/pipeline.py \
-            --sources .cache/gfonts/ofl .cache/gfonts/apache .cache/gfonts/ufl manual/general manual/itf/ffl manual/itf/ofl \
+            --sources .cache/gfonts/ofl .cache/gfonts/apache .cache/gfonts/ufl manual/general manual/itf/ffl manual/itf/ofl manual/fontsource \
             --out dist
 
       - name: Save dist for next run
