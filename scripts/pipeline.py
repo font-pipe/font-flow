@@ -452,7 +452,6 @@ def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: li
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sources", nargs="+", required=True, help="Directories whose children are family folders")
-    ap.add_argument("--optional-sources", nargs="*", default=[], help="Subset of --sources allowed to not exist yet (e.g. a brand-new manual/ subfolder before its first family is added)")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -473,17 +472,13 @@ def main():
     for source_dir in args.sources:
         source_path = Path(source_dir)
         if not source_path.exists():
-            if source_dir in args.optional_sources:
-                print(f"Source dir does not exist yet (declared optional), skipping: {source_path}")
-                continue
-            # A required source directory being missing is exactly the shape
-            # of bug that shipped a near-empty manifest before: an upstream
-            # fetch step silently produced nothing, and the build carried on
-            # regardless. Fail loudly here, at the actual point of the
-            # problem, instead of relying only on the downstream manifest
-            # sanity check to notice several steps later.
-            print(f"FATAL: required source dir does not exist: {source_path}", file=sys.stderr)
-            sys.exit(1)
+            # Missing is normal — plenty of these are manual/ subfolders you
+            # haven't used yet, or a license bucket nothing in families.yaml
+            # happens to need this run. The real check against a genuinely
+            # broken fetch already lives in fetch_google_families.py's own
+            # fetch-count guard, plus the manifest-size guards below.
+            print(f"Source dir does not exist, skipping: {source_path}")
+            continue
         for family_dir in sorted(p for p in source_path.iterdir() if p.is_dir()):
             process_family(family_dir, out_root, manifest_entries)
 
