@@ -25,8 +25,16 @@ def main():
 
     prod_url, new_path = sys.argv[1], sys.argv[2]
 
+    # Plain urllib requests default to a "Python-urllib/x.y" User-Agent,
+    # which Cloudflare's Bot Fight Mode blocks outright (403) even though
+    # the request itself is completely legitimate — it's just fetching a
+    # public JSON file. A normal browser-shaped User-Agent clears that.
+    request = urllib.request.Request(
+        prod_url,
+        headers={"User-Agent": "Mozilla/5.0 (compatible; font-flow-sanity-check/1.0)"},
+    )
     try:
-        with urllib.request.urlopen(prod_url) as resp:
+        with urllib.request.urlopen(request) as resp:
             prod_count = len(json.loads(resp.read()).get("fonts", []))
     except urllib.error.HTTPError as e:
         if e.code == 404:
