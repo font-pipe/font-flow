@@ -54,7 +54,7 @@ jobs:
         run: |
           python3 scripts/pipeline.py \
             --sources .cache/gfonts/ofl .cache/gfonts/apache .cache/gfonts/ufl manual/general manual/itf/ffl manual/itf/ofl manual/fontsource \
-            --optional-sources manual/fontsource \
+            --optional-sources .cache/gfonts/ofl .cache/gfonts/apache .cache/gfonts/ufl manual/fontsource \
             --out dist
 
       - name: Sanity-check manifest size against what's currently live
