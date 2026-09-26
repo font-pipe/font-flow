@@ -66,6 +66,21 @@ def main():
     found = len(families) - len(missing)
     print(f"Fetched {found}/{len(families)} requested families into {CLONE_DIR}")
 
+    # A handful of typo'd paths is normal and shouldn't block the build.
+    # Losing the vast majority is not normal — that's a sign the clone or
+    # sparse-checkout itself went wrong (bad branch name, git behavior
+    # change, network issue, etc.), and silently continuing here is exactly
+    # what let a near-empty google/fonts fetch flow all the way through to
+    # a deployed manifest before.
+    if families and found < len(families) * 0.9:
+        print(
+            f"FATAL: only {found}/{len(families)} requested families were fetched — "
+            f"too many missing to be normal typos. Aborting instead of continuing "
+            f"with a near-empty google/fonts source.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
