@@ -56,6 +56,13 @@ jobs:
             --sources .cache/gfonts/ofl .cache/gfonts/apache .cache/gfonts/ufl manual/general manual/itf/ffl manual/itf/ofl manual/fontsource \
             --out dist
 
+      - name: Sanity-check manifest size against what's currently live
+        # Replace the URL below with your actual Pages URL or custom domain.
+        run: |
+          python3 scripts/sanity_check_manifest.py \
+            https://font-flow.pages.dev/manifest.json \
+            dist/manifest.json
+
       - name: Save dist for next run
         uses: actions/cache/save@v4
         with:

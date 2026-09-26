@@ -328,6 +328,19 @@ def build_woff2(font_path: Path, codepoints, out_path: Path):
 
 
 def process_family(family_dir: Path, out_root: Path, manifest_entries: list):
+    """Thin wrapper: one bad family (a corrupt font file, an unexpected
+    metadata shape, anything) must never take down the whole run — that's
+    what puts a half-built manifest one step away from Save/Deploy. Only
+    the metadata-read step inside _process_family_inner has its own,
+    more specific SKIP reason; this is the backstop for everything after
+    it (file copying, subsetting, the manifest-entry append)."""
+    try:
+        _process_family_inner(family_dir, out_root, manifest_entries)
+    except Exception as e:
+        print(f"SKIP {family_dir.name}: unexpected error: {e}", file=sys.stderr)
+
+
+def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: list):
     is_google = (family_dir / "METADATA.pb").exists()
     itf_css = None if is_google else find_itf_css(family_dir)
     fontsource_meta = None if (is_google or itf_css) else find_fontsource_metadata(family_dir)
@@ -454,6 +467,8 @@ def main():
         except Exception as e:
             print(f"WARN: couldn't read existing manifest, starting fresh: {e}", file=sys.stderr)
 
+    starting_count = len(manifest_entries)
+
     for source_dir in args.sources:
         source_path = Path(source_dir)
         if not source_path.exists():
@@ -461,6 +476,22 @@ def main():
             continue
         for family_dir in sorted(p for p in source_path.iterdir() if p.is_dir()):
             process_family(family_dir, out_root, manifest_entries)
+
+    # process_family only ever replaces a family's own entry or adds a new
+    # one — it never removes one outright. So this count should never be
+    # lower than what we started with. If it is, the loaded manifest was
+    # incomplete (most likely: dist/ failed to restore from cache) rather
+    # than this run legitimately dropping families. Refuse to overwrite a
+    # good manifest with a shrunken one — fail loudly instead of shipping it.
+    if len(manifest_entries) < starting_count:
+        print(
+            f"ABORT: manifest would shrink from {starting_count} to {len(manifest_entries)} "
+            f"families. Not writing manifest.json. This almost always means dist/ (and its "
+            f"manifest) failed to restore from the previous build — check the cache-restore "
+            f"step before re-running.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     manifest_path = out_root / "manifest.json"
     manifest_path.write_text(json.dumps({"fonts": manifest_entries}, indent=2))
