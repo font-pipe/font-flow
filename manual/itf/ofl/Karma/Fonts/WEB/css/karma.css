@@ -1,0 +1,80 @@
+/**
+* @license
+*
+* Font Family: Karma
+* Designed by: Joana Correia
+* URL: https://www.fontshare.com/fonts/karma
+* © 2026 Indian Type Foundry
+*
+* Karma Light 
+* Karma Regular 
+* Karma Medium 
+* Karma SemiBold 
+* Karma Bold 
+* Karma Variable (Variable font)
+
+*
+*/
+@font-face {
+  font-family: 'Karma-Light';
+  src: url('../fonts/Karma-Light.woff2') format('woff2'),
+       url('../fonts/Karma-Light.woff') format('woff'),
+       url('../fonts/Karma-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Karma-Regular';
+  src: url('../fonts/Karma-Regular.woff2') format('woff2'),
+       url('../fonts/Karma-Regular.woff') format('woff'),
+       url('../fonts/Karma-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Karma-Medium';
+  src: url('../fonts/Karma-Medium.woff2') format('woff2'),
+       url('../fonts/Karma-Medium.woff') format('woff'),
+       url('../fonts/Karma-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Karma-SemiBold';
+  src: url('../fonts/Karma-SemiBold.woff2') format('woff2'),
+       url('../fonts/Karma-SemiBold.woff') format('woff'),
+       url('../fonts/Karma-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Karma-Bold';
+  src: url('../fonts/Karma-Bold.woff2') format('woff2'),
+       url('../fonts/Karma-Bold.woff') format('woff'),
+       url('../fonts/Karma-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
+/**
+* This is a variable font
+* You can control variable axes as shown below:
+* font-variation-settings: wght 300.0;
+*
+* available axes:
+'wght' (range from 300.0 to 700.0
+*/
+@font-face {
+  font-family: 'Karma-Variable';
+  src: url('../fonts/Karma-Variable.woff2') format('woff2'),
+       url('../fonts/Karma-Variable.woff') format('woff'),
+       url('../fonts/Karma-Variable.ttf') format('truetype');
+  font-weight: 300 700;
+  font-display: swap;
+  font-style: normal;
+}
+

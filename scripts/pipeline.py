@@ -25,6 +25,7 @@ import shutil
 import sys
 from pathlib import Path
 
+import manifest_lib
 import yaml
 from fontTools.ttLib import TTFont
 from fontTools import subset
@@ -311,6 +312,53 @@ def unicode_range_string(codepoints):
     return ", ".join(f"U+{a:04X}" if a == b else f"U+{a:04X}-{b:04X}" for a, b in ranges)
 
 
+def parse_weight_range(weight_str: str):
+    """Weight is either a single static value ('400') or a variable-font
+    axis range ('100 900'). Always returns (min, max) as ints."""
+    parts = weight_str.split()
+    if len(parts) == 2:
+        return int(parts[0]), int(parts[1])
+    return int(parts[0]), int(parts[0])
+
+
+def compute_style_rollup(files_entry):
+    """Rolls the per-file weight/style pairs already on files_entry up into
+    family-level facts: every distinct {weight, style} actually present,
+    flat booleans for the common cases, the overall weight range, and a
+    count — everything a UI needs to filter/sort families by face support
+    without iterating every file every time."""
+    pairs = sorted({(f["weight"], f["style"]) for f in files_entry})
+    styles = [{"weight": w, "style": s} for w, s in pairs]
+
+    has_regular = has_bold = has_italic = has_bold_italic = False
+    weight_lo = weight_hi = None
+    for w, s in pairs:
+        lo, hi = parse_weight_range(w)
+        weight_lo = lo if weight_lo is None else min(weight_lo, lo)
+        weight_hi = hi if weight_hi is None else max(weight_hi, hi)
+        covers_400 = lo <= 400 <= hi
+        covers_700 = lo <= 700 <= hi
+        if s == "italic":
+            has_italic = True
+            if covers_700:
+                has_bold_italic = True
+        else:
+            if covers_400:
+                has_regular = True
+            if covers_700:
+                has_bold = True
+
+    return {
+        "styles": styles,
+        "hasRegular": has_regular,
+        "hasBold": has_bold,
+        "hasItalic": has_italic,
+        "hasBoldItalic": has_bold_italic,
+        "weightRange": [weight_lo, weight_hi] if weight_lo is not None else None,
+        "styleCount": len(styles),
+    }
+
+
 def build_woff2(font_path: Path, codepoints, out_path: Path):
     ranges = unicode_range_string(codepoints)
     args = [
@@ -327,7 +375,7 @@ def build_woff2(font_path: Path, codepoints, out_path: Path):
             raise RuntimeError(f"pyftsubset failed on {font_path}: exit {e.code}")
 
 
-def process_family(family_dir: Path, out_root: Path, manifest_entries: list):
+def process_family(family_dir: Path, out_root: Path, manifest_entries: list, published: set, force: set):
     """Thin wrapper: one bad family (a corrupt font file, an unexpected
     metadata shape, anything) must never take down the whole run — that's
     what puts a half-built manifest one step away from Save/Deploy. Only
@@ -335,13 +383,24 @@ def process_family(family_dir: Path, out_root: Path, manifest_entries: list):
     more specific SKIP reason; this is the backstop for everything after
     it (file copying, subsetting, the manifest-entry append)."""
     try:
-        _process_family_inner(family_dir, out_root, manifest_entries)
+        _process_family_inner(family_dir, out_root, manifest_entries, published, force)
     except Exception as e:
         print(f"SKIP {family_dir.name}: unexpected error: {e}", file=sys.stderr)
 
 
-def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: list):
+def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: list, published: set, force: set):
     is_google = (family_dir / "METADATA.pb").exists()
+
+    # Stable identifier for "where did this family come from" — 'ofl/actor'
+    # for a google/fonts family, or the manual folder's own path (e.g.
+    # 'manual/general/my-font') for everything else. This is what lets a
+    # run skip families that are already live instead of re-fetching and
+    # re-subsetting them every time.
+    source_id = "/".join(family_dir.parts[-2:]) if is_google else family_dir.as_posix()
+    if source_id in published and "all" not in force and source_id not in force:
+        print(f"SKIP {family_dir.name}: already published as '{source_id}' (pass --force {source_id} to rebuild)")
+        return
+
     itf_css = None if is_google else find_itf_css(family_dir)
     fontsource_meta = None if (is_google or itf_css) else find_fontsource_metadata(family_dir)
     try:
@@ -362,16 +421,23 @@ def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: li
     family_out.mkdir(parents=True, exist_ok=True)
 
     license_file = meta.get("license_file") or find_license_file(family_dir)
+    license_file_rel = None
     if license_file:
+        license_file_rel = f"{slug}/{license_file.name}"
         shutil.copy(license_file, family_out / license_file.name)
 
     files_entry = []
     all_subsets = set()
+    family_is_monospace = None
 
     prebuilt = meta.get("prebuilt", False)
     for f in meta["fonts"]:
         font = TTFont(str(f["path"]), lazy=True)
         cmap_keys = set(font.getBestCmap().keys())
+
+        if family_is_monospace is None:
+            post = font.get("post")
+            family_is_monospace = bool(post.isFixedPitch) if post is not None else False
 
         if "subset" in f:
             # Fontsource: this exact file is already pre-subset to one named
@@ -436,6 +502,7 @@ def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: li
         return
 
     # a family being rebuilt replaces its old entry rather than duplicating it
+    style_info = compute_style_rollup(files_entry)
     manifest_entries[:] = [e for e in manifest_entries if e["id"] != slug]
     manifest_entries.append({
         "id": slug,
@@ -445,27 +512,34 @@ def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: li
         "category": (meta["category"][0].lower().replace("_", "-") if meta["category"] else "unknown"),
         "subsets": sorted(all_subsets),
         "files": files_entry,
+        "source": source_id,
+        "licenseFile": license_file_rel,
+        "isMonospace": family_is_monospace,
+        **style_info,
     })
-    print(f"OK   {meta['family']} ({slug}): {len(files_entry)} files, subsets={sorted(all_subsets)}")
+    print(f"OK   {meta['family']} ({slug}): {len(files_entry)} files, subsets={sorted(all_subsets)}, "
+          f"styles={style_info['styleCount']}")
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sources", nargs="+", required=True, help="Directories whose children are family folders")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--production-manifest-url", default=manifest_lib.DEFAULT_MANIFEST_URL,
+                     help="Where to fetch the currently-live manifest.json from, used as this run's "
+                          "baseline. Families already found here are skipped rather than rebuilt.")
+    ap.add_argument("--force", nargs="*", default=[],
+                     help="Source id(s) to rebuild even though already published (e.g. 'ofl/actor' or "
+                          "'manual/general/my-font'), or 'all' to rebuild everything found under --sources.")
     args = ap.parse_args()
 
     out_root = Path(args.out)
     out_root.mkdir(parents=True, exist_ok=True)
 
-    manifest_path = out_root / "manifest.json"
-    manifest_entries = []
-    if manifest_path.exists():
-        try:
-            manifest_entries = json.loads(manifest_path.read_text()).get("fonts", [])
-            print(f"Loaded {len(manifest_entries)} families from prior build (additive)")
-        except Exception as e:
-            print(f"WARN: couldn't read existing manifest, starting fresh: {e}", file=sys.stderr)
+    manifest_entries = manifest_lib.load_production_manifest(args.production_manifest_url)
+    print(f"Loaded {len(manifest_entries)} families from the live manifest (additive baseline)")
+    published = manifest_lib.published_sources(manifest_entries)
+    force = set(args.force)
 
     starting_count = len(manifest_entries)
 
@@ -480,7 +554,7 @@ def main():
             print(f"Source dir does not exist, skipping: {source_path}")
             continue
         for family_dir in sorted(p for p in source_path.iterdir() if p.is_dir()):
-            process_family(family_dir, out_root, manifest_entries)
+            process_family(family_dir, out_root, manifest_entries, published, force)
 
     # process_family only ever replaces a family's own entry or adds a new
     # one — it never removes one outright. So this count should never be

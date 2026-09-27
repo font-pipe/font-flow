@@ -10,6 +10,7 @@ Usage:
     (reads fontsource_families.yaml in the repo root, writes into
     manual/fontsource/)
 """
+import argparse
 import io
 import json
 import shutil
@@ -17,6 +18,8 @@ import sys
 import tarfile
 import urllib.request
 from pathlib import Path
+
+import manifest_lib
 
 REGISTRY = "https://registry.npmjs.org/@fontsource"
 FAMILIES_FILE = Path("fontsource_families.yaml")
@@ -52,19 +55,40 @@ def fetch_package(name: str, out_dir: Path):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--production-manifest-url", default=manifest_lib.DEFAULT_MANIFEST_URL)
+    ap.add_argument("--force", nargs="*", default=[],
+                     help="Package name(s) to re-fetch even though already published (e.g. 'inter'), "
+                          "or 'all' to fetch everything listed in fontsource_families.yaml.")
+    args = ap.parse_args()
+
     if not FAMILIES_FILE.exists():
         print(f"No {FAMILIES_FILE} found — nothing to fetch from Fontsource. "
               f"(This is fine if you're not using fontsource sources.)")
         return
 
-    names = []
+    all_names = []
     for line in FAMILIES_FILE.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#") or line == "families:":
             continue
-        names.append(line)
-    if not names:
+        all_names.append(line)
+    if not all_names:
         print(f"{FAMILIES_FILE} has no families listed — skipping fontsource fetch.")
+        return
+
+    published = manifest_lib.published_sources(manifest_lib.load_production_manifest(args.production_manifest_url))
+    force = set(args.force)
+    if "all" in force:
+        names = all_names
+    else:
+        names = [n for n in all_names if f"{OUT_DIR.as_posix()}/{n}" not in published or n in force]
+    skipped = len(all_names) - len(names)
+    if skipped:
+        print(f"Skipping {skipped} already-published packages (pass --force <name> to re-fetch one, "
+              f"or --force all to re-fetch everything)")
+    if not names:
+        print("Nothing new to fetch from Fontsource — every listed package is already published.")
         return
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)

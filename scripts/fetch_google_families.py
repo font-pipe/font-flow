@@ -15,10 +15,13 @@ Usage:
     python3 scripts/fetch_google_families.py
     (reads families.yaml in the repo root, writes into .cache/gfonts/)
 """
+import argparse
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+import manifest_lib
 
 REPO_URL = "https://github.com/google/fonts.git"
 CLONE_DIR = Path(".cache/gfonts")
@@ -26,19 +29,40 @@ FAMILIES_FILE = Path("families.yaml")
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--production-manifest-url", default=manifest_lib.DEFAULT_MANIFEST_URL)
+    ap.add_argument("--force", nargs="*", default=[],
+                     help="Family path(s) to re-fetch even though already published (e.g. 'ofl/actor'), "
+                          "or 'all' to fetch everything listed in families.yaml.")
+    args = ap.parse_args()
+
     if not FAMILIES_FILE.exists():
         print(f"No {FAMILIES_FILE} found — nothing to fetch from google/fonts. "
               f"(This is fine if you're only using manual/ sources.)")
         return
 
-    families = []
+    all_families = []
     for line in FAMILIES_FILE.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#") or line == "families:":
             continue
-        families.append(line)
-    if not families:
+        all_families.append(line)
+    if not all_families:
         print(f"{FAMILIES_FILE} has no families listed — skipping google/fonts fetch.")
+        return
+
+    published = manifest_lib.published_sources(manifest_lib.load_production_manifest(args.production_manifest_url))
+    force = set(args.force)
+    if "all" in force:
+        families = all_families
+    else:
+        families = [f for f in all_families if f not in published or f in force]
+    skipped = len(all_families) - len(families)
+    if skipped:
+        print(f"Skipping {skipped} already-published families (pass --force <path> to re-fetch one, "
+              f"or --force all to re-fetch everything)")
+    if not families:
+        print("Nothing new to fetch from google/fonts — every listed family is already published.")
         return
 
     if CLONE_DIR.exists():

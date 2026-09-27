@@ -13,7 +13,12 @@ on:
   # "update the font repo by running the action again": nothing in this repo
   # needs to change, it just re-pulls whatever's currently upstream for every
   # family in families.yaml.
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Source id(s) to rebuild even though already published (space-separated, e.g. 'ofl/actor manual/general/my-font'), or 'all' to rebuild everything."
+        required: false
+        default: ""
   # Uncomment to also rebuild weekly, picking up upstream google/fonts
   # changes (bug fixes, new weights) even when you haven't touched this repo:
   # schedule:
@@ -23,7 +28,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v4
@@ -37,24 +42,20 @@ jobs:
         run: pip install -r scripts/requirements.txt
 
       - name: Fetch requested families from google/fonts
-        run: python3 scripts/fetch_google_families.py
+        run: python3 scripts/fetch_google_families.py --force ${{ inputs.force || '' }}
 
       - name: Fetch requested families from Fontsource
-        run: python3 scripts/fetch_fontsource_families.py
+        run: python3 scripts/fetch_fontsource_families.py --force ${{ inputs.force || '' }}
 
-      - name: Restore previous dist (for additive builds)
-        uses: actions/cache/restore@v4
-        with:
-          path: dist
-          key: font-dist-${{ github.run_id }}
-          restore-keys: |
-            font-dist-
-
-      - name: Build woff2 files + manifest
+      - name: Build woff2 files + manifest for new/changed families only
+        # pipeline.py fetches the manifest that's already live and skips
+        # anything already in it, so this only ever processes what's new —
+        # no cache needed, and nothing here can "forget" what's live.
         run: |
           python3 scripts/pipeline.py \
             --sources .cache/gfonts/ofl .cache/gfonts/apache .cache/gfonts/ufl manual/general manual/itf/ffl manual/itf/ofl manual/fontsource \
-            --out dist
+            --out dist \
+            --force ${{ inputs.force || '' }}
 
       - name: Sanity-check manifest size against what's currently live
         # Replace the URL below with your actual Pages URL or custom domain.
@@ -63,11 +64,17 @@ jobs:
             https://font-flow.pages.dev/manifest.json \
             dist/manifest.json
 
-      - name: Save dist for next run
-        uses: actions/cache/save@v4
-        with:
-          path: dist
-          key: font-dist-${{ github.run_id }}
+      - name: Re-download already-published files into dist/
+        # Cloudflare Pages deploys are full snapshots — dist/ only has the
+        # NEW files pipeline.py just built, so pull every other family's
+        # files back down from the live site before deploying, or they'd
+        # disappear from production. Delete this step entirely if you
+        # switch to the R2 deploy option below instead.
+        run: |
+          python3 scripts/sync_dist_from_production.py \
+            https://font-flow.pages.dev \
+            dist/manifest.json \
+            dist
 
       - name: Upload build output as a workflow artifact
         # Handy for inspecting a build without deploying, or for debugging a
@@ -86,10 +93,43 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }}
 
-      # --- Alternative: R2 instead of Pages ---
-      # Swap the step above for this one if you'd rather target the R2
-      # bucket approach instead. Needs an R2 API token (Account → R2 → Manage
-      # API Tokens) rather than the Pages-scoped token above.
+      - name: Remove now-published manual/ font files from git
+        # manual/ is only ever a staging area for fonts pending their first
+        # deploy. Once a manual family shows up in the manifest we just
+        # deployed, its source files have done their job — delete them from
+        # the repo so it doesn't grow forever with binaries already living
+        # on Cloudflare.
+        run: |
+          python3 scripts/prune_published_manual_fonts.py dist/manifest.json manual/general manual/itf/ffl manual/itf/ofl
+          if ! git diff --quiet -- manual; then
+            git config user.name "font-pipeline-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add manual
+            git commit -m "Prune manual/ fonts published in this run [skip ci]"
+            git push
+          else
+            echo "Nothing to prune."
+          fi
+
+      # --- Alternative: R2 instead of Pages (recommended if you're up for
+      # a one-time setup) ---
+      # R2 + `aws s3 sync` (S3-compatible) only uploads files that are new
+      # or changed and leaves everything already in the bucket alone — so
+      # with this option dist/ never needs the full accumulated file set,
+      # just this run's new files + the merged manifest.json. That means
+      # you can also DELETE the "Re-download already-published files into
+      # dist/" step above entirely if you switch to this.
+      #
+      # IMPORTANT: do not add --delete to the sync command below — that
+      # flag makes sync remove any bucket object that isn't in this run's
+      # (deliberately small) dist/, which would wipe out every family this
+      # run didn't just rebuild.
+      #
+      # Swap the step above for this one. Needs an R2 API token (Account →
+      # R2 → Manage API Tokens) rather than the Pages-scoped token above,
+      # plus a bucket with public access (or a custom domain) set up so
+      # manifest.json and the font files are servable the same way Pages
+      # served them.
       #
       # - name: Deploy to R2
       #   env:
@@ -99,8 +139,7 @@ jobs:
       #   run: |
       #     pip install awscli --break-system-packages -q
       #     aws s3 sync dist/ s3://${{ vars.R2_BUCKET_NAME }}/ \
-      #       --endpoint-url https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com \
-      #       --delete
+      #       --endpoint-url https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
 
       # --- Alternative: push dist/ to a second GitHub repo instead ---
       # This is the "link two repos with a token" approach from your original

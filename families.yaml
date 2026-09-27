@@ -9,16 +9,6 @@
 # For fonts from anywhere other than google/fonts, see manual/README.md instead.
 
 families:
-ofl/42dotsans
-ofl/abeezee
-ofl/abel
-ofl/abhayalibre
-ofl/aboreto
-ofl/abrilfatface
-ofl/abyssinicasil
-ofl/acme
-ofl/actor
-ofl/adamina
 ofl/adlamdisplay
 ofl/adobeblank
 ofl/adventpro
@@ -1966,11 +1956,6 @@ ofl/zeyada
 ofl/zhimangxing
 ofl/zillaslab
 ofl/zillaslabhighlight
-ufl/ubuntu
-ufl/ubuntucondensed
-ufl/ubuntumono
-ufl/ubuntusans
-ufl/ubuntusansmono
 apache/aclonica
 apache/arimo
 apache/calligraffitti
@@ -2018,3 +2003,8 @@ apache/ultra
 apache/unkempt
 apache/walterturncoat
 apache/yellowtail
+ufl/ubuntu
+ufl/ubuntucondensed
+ufl/ubuntumono
+ufl/ubuntusans
+ufl/ubuntusansmono

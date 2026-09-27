@@ -1,0 +1,82 @@
+.
+└── Zodiak_Complete
+    ├── Fonts
+    │   ├── OTF
+    │   │   ├── Zodiak-BlackItalic.otf
+    │   │   ├── Zodiak-Black.otf
+    │   │   ├── Zodiak-BoldItalic.otf
+    │   │   ├── Zodiak-Bold.otf
+    │   │   ├── Zodiak-ExtraboldItalic.otf
+    │   │   ├── Zodiak-Extrabold.otf
+    │   │   ├── Zodiak-Italic.otf
+    │   │   ├── Zodiak-LightItalic.otf
+    │   │   ├── Zodiak-Light.otf
+    │   │   ├── Zodiak-Regular.otf
+    │   │   ├── Zodiak-ThinItalic.otf
+    │   │   └── Zodiak-Thin.otf
+    │   ├── TTF
+    │   │   ├── Zodiak-VariableItalic.ttf
+    │   │   └── Zodiak-Variable.ttf
+    │   └── WEB
+    │       ├── css
+    │       │   └── zodiak.css
+    │       ├── fonts
+    │       │   ├── Zodiak-Black.eot
+    │       │   ├── Zodiak-BlackItalic.eot
+    │       │   ├── Zodiak-BlackItalic.ttf
+    │       │   ├── Zodiak-BlackItalic.woff
+    │       │   ├── Zodiak-BlackItalic.woff2
+    │       │   ├── Zodiak-Black.ttf
+    │       │   ├── Zodiak-Black.woff
+    │       │   ├── Zodiak-Black.woff2
+    │       │   ├── Zodiak-Bold.eot
+    │       │   ├── Zodiak-BoldItalic.eot
+    │       │   ├── Zodiak-BoldItalic.ttf
+    │       │   ├── Zodiak-BoldItalic.woff
+    │       │   ├── Zodiak-BoldItalic.woff2
+    │       │   ├── Zodiak-Bold.ttf
+    │       │   ├── Zodiak-Bold.woff
+    │       │   ├── Zodiak-Bold.woff2
+    │       │   ├── Zodiak-Extrabold.eot
+    │       │   ├── Zodiak-ExtraboldItalic.eot
+    │       │   ├── Zodiak-ExtraboldItalic.ttf
+    │       │   ├── Zodiak-ExtraboldItalic.woff
+    │       │   ├── Zodiak-ExtraboldItalic.woff2
+    │       │   ├── Zodiak-Extrabold.ttf
+    │       │   ├── Zodiak-Extrabold.woff
+    │       │   ├── Zodiak-Extrabold.woff2
+    │       │   ├── Zodiak-Italic.eot
+    │       │   ├── Zodiak-Italic.ttf
+    │       │   ├── Zodiak-Italic.woff
+    │       │   ├── Zodiak-Italic.woff2
+    │       │   ├── Zodiak-Light.eot
+    │       │   ├── Zodiak-LightItalic.eot
+    │       │   ├── Zodiak-LightItalic.ttf
+    │       │   ├── Zodiak-LightItalic.woff
+    │       │   ├── Zodiak-LightItalic.woff2
+    │       │   ├── Zodiak-Light.ttf
+    │       │   ├── Zodiak-Light.woff
+    │       │   ├── Zodiak-Light.woff2
+    │       │   ├── Zodiak-Regular.eot
+    │       │   ├── Zodiak-Regular.ttf
+    │       │   ├── Zodiak-Regular.woff
+    │       │   ├── Zodiak-Regular.woff2
+    │       │   ├── Zodiak-Thin.eot
+    │       │   ├── Zodiak-ThinItalic.eot
+    │       │   ├── Zodiak-ThinItalic.ttf
+    │       │   ├── Zodiak-ThinItalic.woff
+    │       │   ├── Zodiak-ThinItalic.woff2
+    │       │   ├── Zodiak-Thin.ttf
+    │       │   ├── Zodiak-Thin.woff
+    │       │   ├── Zodiak-Thin.woff2
+    │       │   ├── Zodiak-Variable.eot
+    │       │   ├── Zodiak-VariableItalic.eot
+    │       │   ├── Zodiak-VariableItalic.ttf
+    │       │   ├── Zodiak-VariableItalic.woff
+    │       │   ├── Zodiak-VariableItalic.woff2
+    │       │   ├── Zodiak-Variable.ttf
+    │       │   ├── Zodiak-Variable.woff
+    │       │   └── Zodiak-Variable.woff2
+    │       └── README.md
+    └── License
+        └── FFL.txt
