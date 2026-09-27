@@ -487,7 +487,7 @@ def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: li
             cps = codepoints_for_subset(subset_name, cmap_keys)
             if not cps:
                 continue
-            out_name = f"{slug}-{f['style']}-{subset_name}.woff2"
+            out_name = f"{slug}-{f['style']}-{subset_name}-{f['weight'].replace(' ', '_')}.woff2"
             build_woff2(f["path"], cps, family_out / out_name)
             files_entry.append({
                 "path": f"{slug}/{out_name}",
