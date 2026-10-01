@@ -20,6 +20,7 @@ Usage:
 """
 import argparse
 import json
+import os
 import re
 import shutil
 import sys
@@ -410,7 +411,7 @@ def build_woff2(font_path: Path, codepoints, out_path: Path):
             raise RuntimeError(f"pyftsubset failed on {font_path}: exit {e.code}")
 
 
-def process_family(family_dir: Path, out_root: Path, manifest_entries: list, published: set, force: set):
+def process_family(family_dir: Path, out_root: Path, manifest_entries: list, published: set, force: set, stats: dict = None):
     """Thin wrapper: one bad family (a corrupt font file, an unexpected
     metadata shape, anything) must never take down the whole run — that's
     what puts a half-built manifest one step away from Save/Deploy. Only
@@ -418,12 +419,19 @@ def process_family(family_dir: Path, out_root: Path, manifest_entries: list, pub
     more specific SKIP reason; this is the backstop for everything after
     it (file copying, subsetting, the manifest-entry append)."""
     try:
-        _process_family_inner(family_dir, out_root, manifest_entries, published, force)
+        _process_family_inner(family_dir, out_root, manifest_entries, published, force, stats)
     except Exception as e:
-        print(f"SKIP {family_dir.name}: unexpected error: {e}", file=sys.stderr)
+        source_id = family_dir.as_posix()
+        is_staging = any(prefix in family_dir.as_posix() for prefix in ["manual/general", "manual/itf"])
+        error_msg = f"unexpected error: {e}"
+        print(f"SKIP {family_dir.name}: {error_msg}", file=sys.stderr)
+        if is_staging:
+            print(f"::error title=Manual Font Build Failed::{family_dir.name} ({source_id}): {error_msg}", file=sys.stderr)
+        if stats is not None:
+            stats["failures"].append({"family": family_dir.name, "source": source_id, "error": error_msg, "is_manual": is_staging})
 
 
-def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: list, published: set, force: set):
+def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: list, published: set, force: set, stats: dict = None):
     is_google = (family_dir / "METADATA.pb").exists()
 
     # Stable identifier for "where did this family come from" — 'ofl/actor'
@@ -435,9 +443,11 @@ def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: li
     # Staging directories (manual/general and manual/itf) are explicitly tracked in git
     # and pruned upon successful deployment. If a family directory exists there, it is
     # pending deploy or re-deploy, so we always process it.
-    is_staging = any(family_dir.as_posix().startswith(prefix) for prefix in ["manual/general", "manual/itf"])
+    is_staging = any(prefix in family_dir.as_posix() for prefix in ["manual/general", "manual/itf"])
     if not is_staging and source_id in published and "all" not in force and source_id not in force:
         print(f"SKIP {family_dir.name}: already published as '{source_id}' (pass --force {source_id} to rebuild)")
+        if stats is not None:
+            stats["skipped_published"].append({"family": family_dir.name, "source": source_id})
         return
 
     itf_css = None if is_google else find_itf_css(family_dir)
@@ -452,7 +462,12 @@ def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: li
         else:
             meta = read_manual_metadata(family_dir)
     except Exception as e:
-        print(f"SKIP {family_dir.name}: {e}", file=sys.stderr)
+        error_msg = str(e)
+        print(f"SKIP {family_dir.name}: {error_msg}", file=sys.stderr)
+        if is_staging:
+            print(f"::error title=Manual Font Build Failed::{family_dir.name} ({source_id}): {error_msg}", file=sys.stderr)
+        if stats is not None:
+            stats["failures"].append({"family": family_dir.name, "source": source_id, "error": error_msg, "is_manual": is_staging})
         return
 
     slug = slugify(meta["family"])
@@ -537,7 +552,12 @@ def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: li
             all_subsets.add(subset_name)
 
     if not files_entry:
-        print(f"SKIP {meta['family']}: produced zero files", file=sys.stderr)
+        error_msg = "produced zero files (check font format or subset coverage)"
+        print(f"SKIP {meta['family']}: {error_msg}", file=sys.stderr)
+        if is_staging:
+            print(f"::error title=Manual Font Build Failed::{meta['family']} ({source_id}): {error_msg}", file=sys.stderr)
+        if stats is not None:
+            stats["failures"].append({"family": meta["family"], "source": source_id, "error": error_msg, "is_manual": is_staging})
         return
 
     # a family being rebuilt replaces its old entry rather than duplicating it
@@ -556,8 +576,78 @@ def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: li
         "isMonospace": family_is_monospace,
         **style_info,
     })
+    if stats is not None:
+        stats["built"].append({
+            "id": slug,
+            "family": meta["family"],
+            "source": source_id,
+            "files": len(files_entry),
+            "styles": style_info["styleCount"],
+            "is_manual": is_staging,
+        })
     print(f"OK   {meta['family']} ({slug}): {len(files_entry)} files, subsets={sorted(all_subsets)}, "
           f"styles={style_info['styleCount']}")
+
+
+def write_summary(stats: dict, starting_count: int, final_count: int):
+    built = stats.get("built", [])
+    skipped = stats.get("skipped_published", [])
+    failures = stats.get("failures", [])
+
+    print("\n" + "=" * 60)
+    print("FONT PIPELINE RUN SUMMARY")
+    print("=" * 60)
+    print(f"  Live baseline families:       {starting_count:,}")
+    print(f"  Built / updated this run:     {len(built):,}")
+    print(f"  Already published (skipped):  {len(skipped):,}")
+    print(f"  Failures / Errors:            {len(failures):,}")
+    print(f"  Total manifest families:      {final_count:,}")
+
+    if failures:
+        print("\nFailed families:")
+        for f in failures:
+            tag = " [MANUAL]" if f.get("is_manual") else ""
+            print(f"  - {f['family']}{tag} ({f['source']}): {f['error']}")
+
+    if built:
+        print("\nSuccessfully built families:")
+        for b in built:
+            print(f"  + {b['family']} ({b['id']}): {b['files']} files, {b['styles']} styles")
+    print("=" * 60 + "\n")
+
+    summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary_file:
+        try:
+            md = [
+                "## 🔤 Font Pipeline Build Summary\n",
+                "| Metric | Count |",
+                "|---|---|",
+                f"| 📦 Live baseline families | {starting_count:,} |",
+                f"| ✅ Built / updated this run | {len(built):,} |",
+                f"| ⏩ Already published (skipped) | {len(skipped):,} |",
+                f"| ❌ Failures / Errors | {len(failures):,} |",
+                f"| 📊 Total manifest families | {final_count:,} |\n",
+            ]
+            if failures:
+                md.append("### ❌ Failed Families")
+                md.append("| Family | Source | Error |")
+                md.append("|---|---|---|")
+                for f in failures:
+                    tag = " **[MANUAL]**" if f.get("is_manual") else ""
+                    md.append(f"| {f['family']}{tag} | `{f['source']}` | {f['error']} |")
+                md.append("")
+            if built:
+                md.append("### ✅ Successfully Built / Updated Families (this run)")
+                md.append("| Family | ID | Files | Styles | Source |")
+                md.append("|---|---|---|---|---|")
+                for b in built:
+                    md.append(f"| {b['family']} | `{b['id']}` | {b['files']} | {b['styles']} | `{b['source']}` |")
+                md.append("")
+
+            with open(summary_file, "a", encoding="utf-8") as f:
+                f.write("\n".join(md) + "\n")
+        except Exception as e:
+            print(f"Warning: failed to write GITHUB_STEP_SUMMARY: {e}", file=sys.stderr)
 
 
 def main():
@@ -570,6 +660,10 @@ def main():
     ap.add_argument("--force", nargs="*", default=[],
                      help="Source id(s) to rebuild even though already published (e.g. 'ofl/actor' or "
                           "'manual/general/my-font'), or 'all' to rebuild everything found under --sources.")
+    ap.add_argument("--strict", action="store_true",
+                     help="Fail with non-zero exit code if ANY font family fails to build")
+    ap.add_argument("--no-fail-on-manual", action="store_true",
+                     help="Do not exit with error if manual fonts fail (default: fail on manual font error)")
     args = ap.parse_args()
 
     out_root = Path(args.out)
@@ -580,6 +674,7 @@ def main():
     published = manifest_lib.published_sources(manifest_entries)
     force = set(args.force)
 
+    stats = {"built": [], "skipped_published": [], "failures": []}
     starting_count = len(manifest_entries)
 
     for source_dir in args.sources:
@@ -593,7 +688,7 @@ def main():
             print(f"Source dir does not exist, skipping: {source_path}")
             continue
         for family_dir in sorted(p for p in source_path.iterdir() if p.is_dir()):
-            process_family(family_dir, out_root, manifest_entries, published, force)
+            process_family(family_dir, out_root, manifest_entries, published, force, stats)
 
     # process_family only ever replaces a family's own entry or adds a new
     # one — it never removes one outright. So this count should never be
@@ -614,6 +709,24 @@ def main():
     manifest_path = out_root / "manifest.json"
     manifest_path.write_text(json.dumps({"fonts": manifest_entries}, indent=2))
     print(f"\nWrote manifest with {len(manifest_entries)} families to {manifest_path}")
+
+    write_summary(stats, starting_count, len(manifest_entries))
+
+    manual_failures = [f for f in stats["failures"] if f["is_manual"]]
+    if manual_failures and not args.no_fail_on_manual:
+        print(
+            f"ABORT: {len(manual_failures)} manual font family/families failed to build. "
+            f"Check the errors above or in the job summary.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    if stats["failures"] and args.strict:
+        print(
+            f"ABORT: {len(stats['failures'])} family/families failed to build under --strict.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 
 if __name__ == "__main__":
