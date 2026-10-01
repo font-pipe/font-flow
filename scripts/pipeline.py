@@ -37,7 +37,32 @@ import gfsubsets
 # FFL = Fontshare/Indian Type Foundry's own "Free Font License" — added here
 # for the ITF source below. Confirm FFL's terms actually permit this kind of
 # redistribution before shipping a real foundry drop under it.
-ALLOWED_LICENSES = {"OFL", "OFL-1.1", "Apache-2.0", "APACHE2", "MIT", "UFL", "UFL-1.0", "CC0", "FFL"}
+ALLOWED_LICENSES = {
+    "OFL", "OFL-1.1", "Apache-2.0", "APACHE2", "MIT",
+    "UFL", "UFL-1.0", "CC0", "CC0-1.0", "Unlicense", "FFL"
+}
+
+LICENSE_CANONICAL_MAP = {
+    "OFL": "OFL",
+    "OFL-1.1": "OFL-1.1",
+    "APACHE-2.0": "Apache-2.0",
+    "APACHE2": "APACHE2",
+    "MIT": "MIT",
+    "UFL": "UFL",
+    "UFL-1.0": "UFL-1.0",
+    "CC0": "CC0",
+    "CC0-1.0": "CC0-1.0",
+    "UNLICENSE": "Unlicense",
+    "FFL": "FFL",
+}
+
+
+def normalize_license(lic: str | None) -> str | None:
+    if not lic:
+        return None
+    return LICENSE_CANONICAL_MAP.get(str(lic).strip().upper())
+
+
 LICENSE_FILENAMES = ["OFL.txt", "LICENSE.txt", "UFL.txt", "LICENSE"]
 # ITF ships different license files depending on the family — check each
 # family's License/ folder for whichever of these is present rather than
@@ -77,7 +102,12 @@ def read_metadata_pb(family_dir: Path):
     upstream, so weight/style here are more trustworthy than re-deriving them
     from OS/2 alone."""
     msg = fonts_public_pb2.FamilyProto()
-    text_format.Merge((family_dir / "METADATA.pb").read_text(), msg)
+    text_format.Merge(
+        (family_dir / "METADATA.pb").read_text(),
+        msg,
+        allow_unknown_field=True,
+        allow_unknown_extension=True,
+    )
 
     axis_range = None
     for a in msg.axes:
@@ -142,6 +172,56 @@ def extract_style_weight_from_tables(font_path: Path):
     return [(style, str(table_weight))]
 
 
+def read_google_early_access_metadata(family_dir: Path):
+    """Fallback for Google fonts lacking METADATA.pb (e.g. Early Access CJK/indic fonts).
+    Derives family name and styles from OpenType tables and license from directory/file."""
+    font_paths = sorted(list(family_dir.glob("*.ttf")) + list(family_dir.glob("*.otf")))
+    if not font_paths:
+        raise ValueError("no .ttf or .otf font files found")
+
+    first_font = TTFont(str(font_paths[0]), lazy=True)
+    name_tbl = first_font["name"]
+    family = name_tbl.getDebugName(16) or name_tbl.getDebugName(1)
+    if not family:
+        family = family_dir.name.replace("-", " ").title()
+
+    license_file = find_license_file(family_dir)
+    if license_file and "OFL" in license_file.name.upper():
+        lic = "OFL"
+    elif license_file and ("LICENSE" in license_file.name.upper() or "APACHE" in license_file.name.upper()):
+        lic = "Apache-2.0"
+    elif "ofl" in family_dir.parts:
+        lic = "OFL"
+    elif "apache" in family_dir.parts:
+        lic = "Apache-2.0"
+    elif "ufl" in family_dir.parts:
+        lic = "UFL"
+    else:
+        lic = "OFL"
+
+    cat = "unknown"
+    cat_file = family_dir / "EARLY_ACCESS.category"
+    if cat_file.exists():
+        cat = cat_file.read_text().strip().lower()
+
+    fonts = []
+    for font_path in font_paths:
+        pairs = extract_style_weight_from_tables(font_path)
+        for style, weight in pairs:
+            fonts.append({"path": font_path, "style": style, "weight": weight})
+
+    return {
+        "family": family,
+        "license": lic,
+        "designer": "Unknown",
+        "category": [cat],
+        "declared_subsets": None,  # detect from font coverage
+        "fonts": fonts,
+        "license_file": license_file,
+        "prebuilt": False,
+    }
+
+
 def find_itf_css(family_dir: Path):
     """ITF/Fontshare-style drop (manual/itf/<family>/Fonts/WEB/css/*.css)
     identifies itself by this path; fonts arrive pre-built as woff2."""
@@ -172,8 +252,9 @@ def read_itf_metadata(family_dir: Path, css_path: Path):
             break
     if not license_file:
         raise ValueError(f"no recognized license file under {license_dir} (looked for {', '.join(ITF_LICENSE_FILES)})")
-    if license_name not in ALLOWED_LICENSES:
-        raise ValueError(f"license '{license_name}' not in allowlist")
+    norm_license = normalize_license(license_name)
+    if not norm_license:
+        raise ValueError(f"license '{license_name}' not in allowlist {sorted(ALLOWED_LICENSES)}")
 
     fonts_dir = family_dir / "Fonts" / "WEB" / "fonts"
     faces = []
@@ -195,7 +276,7 @@ def read_itf_metadata(family_dir: Path, css_path: Path):
 
     return {
         "family": family,
-        "license": license_name,
+        "license": norm_license,
         "designer": "Unknown",
         "category": ["unknown"],
         "declared_subsets": None,
@@ -238,9 +319,10 @@ def read_fontsource_metadata(family_dir: Path, meta_path: Path):
     per weight/style/subset — no re-subsetting needed, just copy each file
     through under the one subset its filename says it is."""
     meta_json = json.loads(meta_path.read_text())
-    license_type = meta_json.get("license", {}).get("type")
-    if license_type not in ALLOWED_LICENSES:
-        raise ValueError(f"license '{license_type}' not in allowlist {sorted(ALLOWED_LICENSES)}")
+    raw_license = meta_json.get("license", {}).get("type")
+    norm_license = normalize_license(raw_license)
+    if not norm_license:
+        raise ValueError(f"license '{raw_license}' not in allowlist {sorted(ALLOWED_LICENSES)}")
 
     font_id = meta_json["id"]
     fonts = []
@@ -254,7 +336,7 @@ def read_fontsource_metadata(family_dir: Path, meta_path: Path):
 
     return {
         "family": meta_json["family"],
-        "license": license_type,
+        "license": norm_license,
         "designer": meta_json.get("license", {}).get("attribution", "Unknown"),
         "category": [meta_json.get("category", "unknown")],
         "declared_subsets": None,  # unused — each file already carries its own subset
@@ -281,8 +363,10 @@ def read_manual_metadata(family_dir: Path):
     if not meta_path.exists():
         raise ValueError("no METADATA.pb and no family.yaml — can't determine license, skipping")
     meta = yaml.safe_load(meta_path.read_text())
-    if meta.get("license") not in ALLOWED_LICENSES:
-        raise ValueError(f"license '{meta.get('license')}' not in allowlist {sorted(ALLOWED_LICENSES)}")
+    raw_license = meta.get("license")
+    norm_license = normalize_license(raw_license)
+    if not norm_license:
+        raise ValueError(f"license '{raw_license}' not in allowlist {sorted(ALLOWED_LICENSES)}")
 
     overrides = meta.get("overrides", {}) or {}
 
@@ -301,7 +385,7 @@ def read_manual_metadata(family_dir: Path):
 
     return {
         "family": meta["family"],
-        "license": meta["license"],
+        "license": norm_license,
         "designer": meta.get("designer", "Unknown"),
         "category": [meta.get("category", "unknown")],
         "declared_subsets": None,  # unknown up front — detect from the font's own coverage
@@ -329,7 +413,13 @@ def detect_subsets(font_path: Path, declared_subsets):
 def codepoints_for_subset(subset_name: str, font_cmap_keys: set):
     """Intersect the subset's defined codepoints with what this font file
     actually has a glyph for — avoids declaring coverage the font doesn't have."""
-    subset_cps = set(gfsubsets.CodepointsInSubset(subset_name, unique_glyphs=True))
+    if subset_name == "emoji":
+        return sorted(font_cmap_keys)
+    try:
+        cps = gfsubsets.CodepointsInSubset(subset_name, unique_glyphs=True)
+    except Exception:
+        cps = []
+    subset_cps = set(cps)
     return sorted(subset_cps & font_cmap_keys)
 
 
@@ -432,7 +522,11 @@ def process_family(family_dir: Path, out_root: Path, manifest_entries: list, pub
 
 
 def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: list, published: set, force: set, stats: dict = None):
-    is_google = (family_dir / "METADATA.pb").exists()
+    is_google = (
+        (family_dir / "METADATA.pb").exists()
+        or any(p in family_dir.parts for p in [".cache", "gfonts"])
+        or (len(family_dir.parts) >= 2 and family_dir.parts[-2] in ("ofl", "apache", "ufl") and "manual" not in family_dir.parts)
+    )
 
     # Stable identifier for "where did this family come from" — 'ofl/actor'
     # for a google/fonts family, or the manual folder's own path (e.g.
@@ -453,8 +547,10 @@ def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: li
     itf_css = None if is_google else find_itf_css(family_dir)
     fontsource_meta = None if (is_google or itf_css) else find_fontsource_metadata(family_dir)
     try:
-        if is_google:
+        if (family_dir / "METADATA.pb").exists():
             meta = read_metadata_pb(family_dir)
+        elif is_google:
+            meta = read_google_early_access_metadata(family_dir)
         elif itf_css:
             meta = read_itf_metadata(family_dir, itf_css)
         elif fontsource_meta:

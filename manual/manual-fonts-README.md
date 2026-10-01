@@ -33,7 +33,7 @@ manual/general/
 | Field      | Required? | Notes |
 |------------|-----------|-------|
 | `family`   | yes       | Display name, e.g. `My Custom Font` |
-| `license`  | yes       | Must be one of: `OFL`, `OFL-1.1`, `Apache-2.0`, `APACHE2`, `MIT`, `UFL`, `UFL-1.0`, `CC0`, `FFL`. Anything else gets skipped with a warning. |
+| `license`  | yes       | Must be one of: `OFL`, `OFL-1.1`, `Apache-2.0`, `APACHE2`, `MIT`, `UFL`, `UFL-1.0`, `CC0`, `CC0-1.0`, `Unlicense`, `FFL`. Anything else gets skipped with a warning. |
 | `designer` | no        | Defaults to `Unknown` |
 | `category` | no        | e.g. `sans-serif`, `serif`, `display`. Defaults to `unknown` |
 | `overrides` | no       | Optional map of filename -> `{weight, style}` to override font table metadata |
