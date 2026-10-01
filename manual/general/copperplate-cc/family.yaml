@@ -1,0 +1,9 @@
+category: serif
+designer: Owen Earl
+family: Copperplate CC
+license: OFL
+overrides:
+  CopperplateCC-Bold.ttf:
+    weight: '900'
+  CopperplateCC-Heavy.ttf:
+    weight: '700'

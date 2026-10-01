@@ -102,7 +102,12 @@ def read_metadata_pb(family_dir: Path):
 
 
 def extract_style_weight_from_tables(font_path: Path):
-    """Fallback for fonts with no METADATA.pb: read OpenType tables directly."""
+    """Fallback for fonts with no METADATA.pb: read OpenType tables directly.
+
+    Returns a list of (style, weight) tuples. Usually one entry, but variable
+    fonts that expose a 'slnt' (slant) axis return two — one for normal, one
+    for italic — since both live in the same file rather than separate files.
+    """
     font = TTFont(str(font_path), lazy=True)
     name = font["name"]
     os2 = font.get("OS/2")
@@ -114,17 +119,26 @@ def extract_style_weight_from_tables(font_path: Path):
 
     if "fvar" in font:
         axes = {a.axisTag: (a.minValue, a.maxValue) for a in font["fvar"].axes}
+        weight_str = None
         if "wght" in axes:
             lo, hi = axes["wght"]
-            return style, f"{int(lo)} {int(hi)}"
+            weight_str = f"{int(lo)} {int(hi)}"
+        else:
+            weight_str = str(os2.usWeightClass if os2 else 400)
+        # A slnt axis with a negative minimum means slanted (italic-style) glyphs
+        # live in this same file — emit a separate italic entry alongside normal.
+        has_slnt = "slnt" in axes and axes["slnt"][0] < 0
+        if has_slnt and style == "normal":
+            return [("normal", weight_str), ("italic", weight_str)]
+        return [(style, weight_str)]
 
     table_weight = os2.usWeightClass if os2 else 400
     name_weight = weight_from_name(subfamily)
     if name_weight and abs(name_weight - table_weight) > 100:
         print(f"  ! weight mismatch in {font_path.name}: OS/2 says {table_weight}, "
               f"name says '{subfamily}' (~{name_weight}) — using name-derived value", file=sys.stderr)
-        return style, str(name_weight)
-    return style, str(table_weight)
+        return [(style, str(name_weight))]
+    return [(style, str(table_weight))]
 
 
 def find_itf_css(family_dir: Path):
@@ -250,7 +264,18 @@ def read_fontsource_metadata(family_dir: Path, meta_path: Path):
 
 def read_manual_metadata(family_dir: Path):
     """Non-Google source: family.yaml sidecar supplies what we can't derive
-    from the font file itself (chiefly: license)."""
+    from the font file itself (chiefly: license).
+
+    Optional 'overrides' key maps font filenames to explicit style/weight
+    values, bypassing table detection for fonts with incorrect internal
+    metadata:
+
+        overrides:
+          MyFont-Bold.ttf:
+            weight: "700"
+          MyFont-Heavy.ttf:
+            weight: "900"
+    """
     meta_path = family_dir / "family.yaml"
     if not meta_path.exists():
         raise ValueError("no METADATA.pb and no family.yaml — can't determine license, skipping")
@@ -258,14 +283,20 @@ def read_manual_metadata(family_dir: Path):
     if meta.get("license") not in ALLOWED_LICENSES:
         raise ValueError(f"license '{meta.get('license')}' not in allowlist {sorted(ALLOWED_LICENSES)}")
 
+    overrides = meta.get("overrides", {}) or {}
+
     woff2_paths = sorted(family_dir.glob("*.woff2"))
     prebuilt = bool(woff2_paths)
     font_paths = woff2_paths if prebuilt else sorted(list(family_dir.glob("*.ttf")) + list(family_dir.glob("*.otf")))
 
     fonts = []
     for font_path in font_paths:
-        style, weight = extract_style_weight_from_tables(font_path)
-        fonts.append({"path": font_path, "style": style, "weight": weight})
+        file_override = overrides.get(font_path.name, {}) or {}
+        style_weight_pairs = extract_style_weight_from_tables(font_path)
+        for style, weight in style_weight_pairs:
+            effective_style = file_override.get("style", style)
+            effective_weight = str(file_override.get("weight", weight))
+            fonts.append({"path": font_path, "style": effective_style, "weight": effective_weight})
 
     return {
         "family": meta["family"],
@@ -287,6 +318,10 @@ def detect_subsets(font_path: Path, declared_subsets):
     if declared_subsets:
         return declared_subsets
     detected = gfsubsets.SubsetsInFont(str(font_path), 50, 10)
+    if not detected:
+        # Fall back to a lower coverage threshold for display/novelty fonts
+        # that only implement basic ASCII/Latin without extensive diacritics.
+        detected = gfsubsets.SubsetsInFont(str(font_path), 20, 10)
     return [name for name, _, _ in detected]
 
 
@@ -397,7 +432,11 @@ def _process_family_inner(family_dir: Path, out_root: Path, manifest_entries: li
     # run skip families that are already live instead of re-fetching and
     # re-subsetting them every time.
     source_id = "/".join(family_dir.parts[-2:]) if is_google else family_dir.as_posix()
-    if source_id in published and "all" not in force and source_id not in force:
+    # Staging directories (manual/general and manual/itf) are explicitly tracked in git
+    # and pruned upon successful deployment. If a family directory exists there, it is
+    # pending deploy or re-deploy, so we always process it.
+    is_staging = any(family_dir.as_posix().startswith(prefix) for prefix in ["manual/general", "manual/itf"])
+    if not is_staging and source_id in published and "all" not in force and source_id not in force:
         print(f"SKIP {family_dir.name}: already published as '{source_id}' (pass --force {source_id} to rebuild)")
         return
 

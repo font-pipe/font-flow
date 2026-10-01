@@ -36,12 +36,16 @@ manual/general/
 | `license`  | yes       | Must be one of: `OFL`, `OFL-1.1`, `Apache-2.0`, `APACHE2`, `MIT`, `UFL`, `UFL-1.0`, `CC0`, `FFL`. Anything else gets skipped with a warning. |
 | `designer` | no        | Defaults to `Unknown` |
 | `category` | no        | e.g. `sans-serif`, `serif`, `display`. Defaults to `unknown` |
+| `overrides` | no       | Optional map of filename -> `{weight, style}` to override font table metadata |
 
 ```yaml
 family: My Custom Font
 license: OFL
 designer: Jane Doe
 category: sans-serif
+overrides:
+  MyFont-Heavy.ttf:
+    weight: "900"
 ```
 
 **License file:** put the actual license text in the folder as `OFL.txt`,
